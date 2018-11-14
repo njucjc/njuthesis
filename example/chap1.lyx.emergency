@@ -1,0 +1,406 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass ../build/thesis
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package none
+\inputencoding utf8-plain
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format pdf4
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Assignment 1: Raft Leader Election
+\end_layout
+
+\begin_layout Author
+姓名：陈锦赐
+\begin_inset space \hspace{}
+\length 0.5cm
+\end_inset
+
+学号：MF1833004
+\end_layout
+
+\begin_layout Date
+2018年11月14日
+\end_layout
+
+\begin_layout Chapter
+实验分析
+\end_layout
+
+\begin_layout Section
+实验目标
+\end_layout
+
+\begin_layout Standard
+本次实验的实验目标是：在给定的实验框架下，用go语言实现分布式一致性算法Raft的Leader Election部分，并通过与Leader Election相关
+的测试用例。
+\end_layout
+
+\begin_layout Section
+Raft Leader Election概览
+\end_layout
+
+\begin_layout Subsection
+角色/状态（Server State）
+\end_layout
+
+\begin_layout Standard
+Raft把一个分布式集群的所有服务器分为三种状态，在任意时刻，集群中的服务器只能是以下三种状态之一：
+\end_layout
+
+\begin_layout Itemize
+Leader：集中处理所有与客户端的交互，以及与其他server间的日志同步（同一时刻至多一个）。
+\end_layout
+
+\begin_layout Itemize
+Follower：集群刚启动的时候，所有server均处于Follower的状态，被动响应Leader的请求。
+\end_layout
+
+\begin_layout Itemize
+Candidate：用于选举出新的Leader的中间状态。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+在正常的状态下，一个集群的状态应该是：唯一一个Leader，其他的都为Follower，其状态转移的过程如图1.1所示：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/jim/Downloads/raft.png
+	lyxscale 50
+	height 4.5cm
+	rotateOrigin center
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Raft Server状态转换图
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+任期（Term）
+\end_layout
+
+\begin_layout Standard
+在Raft中，时间被划分成一个个的Term，每个Term都有一个编号，这个编号是单向递增且从未被使用过的。在每个Term的前面一小部分用于选举出新的Leader
+，若选举成功，则这个Term的剩余时间将由选出的Leader来统治。
+\end_layout
+
+\begin_layout Standard
+Raft算法保证在一个Term里至多由一个Leader来统治，其余选举失败的Server将自动变回Follower。需要注意的是并非每个Term内都有Leade
+r，若所有的Candidate所获得的选票都没有过半，则此次选举失败，并开始下一轮选举。
+\end_layout
+
+\begin_layout Subsection
+选举算法
+\end_layout
+
+\begin_layout Standard
+Raft采用heartbeat机制来触发一次Leader的选举。Leader在其任期内必须周期性地向各个Follower发送heartbeat或正常的RPC请求
+，以宣誓自己的领导主权。当Follower在一段时间内（Election timeout）没有收到请求，则认为系统集群已经没有Leader了，触发一次选举的流程
+。
+\end_layout
+
+\begin_layout Standard
+选举流程如下：
+\end_layout
+
+\begin_layout Itemize
+集群刚启动的时候，将所有的Server都设为Follower，不设置Leader，期间所有的Server都在等待RPC请求，直到一部分Server触发timeo
+ut，开始参加竞选Leader。
+\end_layout
+
+\begin_layout Itemize
+参加竞选的Follower的第一件事是增大自的当前Term值，然后将状态转换为Candidate状态。
+\end_layout
+
+\begin_layout Itemize
+转换为Candidate状态后的第一件事就是为自己投上一票，然后向所有其他Server发送RequestVote RPC为自己拉取选票。
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+当某个Candidate得到半数以上的Server的投票之后，立即向所有其他Server发送heartbeat，宣誓自己的主权。
+\end_layout
+
+\begin_layout Itemize
+若Candidate收到了来自Leader（其他Candidate竞选成功）的RPC请求则立即回到Follower的状态。
+\end_layout
+
+\begin_layout Itemize
+若以上两种情况都没有发生，表明Election timeout，即没有选举出新的Leader，进入下一轮选举。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+为了尽量在每次选举中都能成功选举出Leader，Raft的Election timeout是在一个区间里随机选择的，尽量把Server的选举时间分散到不同的时间
+，从而减少平票或选票不足的情况。
+\end_layout
+
+\begin_layout Chapter
+算法实现
+\end_layout
+
+\begin_layout Standard
+由于实验给了框架代码和大致的实验流程，所以接下来的工作都围绕着框架代码进行就可以了。
+\end_layout
+
+\begin_layout Section
+数据结构
+\end_layout
+
+\begin_layout Subsection
+Raft structure
+\end_layout
+
+\begin_layout Standard
+定义了一个Raft服务器的结构体，它的字段如下：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+字段名称
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+描述
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Raft结构体字段解析
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
