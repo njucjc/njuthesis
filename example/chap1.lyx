@@ -94,6 +94,15 @@ Assignment 1: Raft Leader Election
 2018年11月14日
 \end_layout
 
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 实验分析
 \end_layout
