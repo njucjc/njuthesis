@@ -109,6 +109,14 @@ Assignment 1: Raft Leader Election
 
 \begin_layout Section
 Raft Leader Election概览
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-1,key-2"
+literal "false"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -120,11 +128,11 @@ Raft把一个分布式集群的所有服务器分为三种状态，在任意时�
 \end_layout
 
 \begin_layout Itemize
-Leader：集中处理所有与客户端的交互，以及与其他server间的日志同步（同一时刻至多一个）。
+Leader：集中处理所有与客户端的交互，以及与其他Server间的日志同步（同一时刻至多一个）。
 \end_layout
 
 \begin_layout Itemize
-Follower：集群刚启动的时候，所有server均处于Follower的状态，被动响应Leader的请求。
+Follower：集群刚启动的时候，所有Server均处于Follower的状态，被动响应Leader的请求。
 \end_layout
 
 \begin_layout Itemize
@@ -139,7 +147,17 @@ Candidate：用于选举出新的Leader的中间状态。
 \end_layout
 
 \begin_layout Standard
-在正常的状态下，一个集群的状态应该是：唯一一个Leader，其他的都为Follower，其状态转移的过程如图1.1所示：
+在正常的状态下，一个集群的状态应该是：唯一一个Leader，其他的都为Follower，其状态转移的过程如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:1.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
 \end_layout
 
 \begin_layout Standard
@@ -162,6 +180,13 @@ status open
 
 \begin_layout Plain Layout
 Raft Server状态转换图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:1.1"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -251,6 +276,14 @@ ut，开始参加竞选Leader。
 
 \begin_layout Section
 数据结构
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-4,key-5,key-6,key-3"
+literal "false"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -258,7 +291,17 @@ Raft Structure
 \end_layout
 
 \begin_layout Standard
-定义了一个Raft服务器的结构体，它的字段如下：
+定义了一个Raft服务器的结构体，它的字段如表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:2.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
 \end_layout
 
 \begin_layout Standard
@@ -266,9 +309,30 @@ Raft Structure
 placement h
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Raft结构体字段
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:2.1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="10" columns="3">
 <features tabularvalignment="middle">
@@ -276,25 +340,29 @@ status open
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 字段名称
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 类型
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -305,7 +373,7 @@ status open
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -314,7 +382,7 @@ mu
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -323,7 +391,7 @@ sync.Mutex
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -334,7 +402,7 @@ sync.Mutex
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -343,7 +411,7 @@ peers
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -352,7 +420,7 @@ peers
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -363,7 +431,7 @@ peers
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -372,7 +440,7 @@ me
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -381,7 +449,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -392,7 +460,7 @@ int
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -401,7 +469,7 @@ currentTerm
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -410,7 +478,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -421,7 +489,7 @@ Server当前所在的任期
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -430,7 +498,7 @@ votedFor
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -439,7 +507,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -450,7 +518,7 @@ int
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -459,7 +527,7 @@ candidateToFollower
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -468,7 +536,7 @@ chan int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -479,7 +547,7 @@ chan int
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -488,7 +556,7 @@ leaderToFollower
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -497,7 +565,7 @@ chan int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -508,7 +576,7 @@ chan int
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -517,7 +585,7 @@ heartbeat
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -526,7 +594,7 @@ chan int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -537,7 +605,7 @@ chan int
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -546,7 +614,7 @@ electionTimer
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -555,7 +623,7 @@ electionTimer
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -566,15 +634,6 @@ electionTimer
 </cell>
 </row>
 </lyxtabular>
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Raft结构体字段
-\end_layout
 
 \end_inset
 
@@ -595,7 +654,17 @@ RequestVoteArgs Structure
 \end_layout
 
 \begin_layout Standard
-定义请求投票的RPC参数数据结构RequestVoteArgs，它的字段如下：
+定义请求投票的RPC参数数据结构RequestVoteArgs，它的字段如表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:2.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
 \end_layout
 
 \begin_layout Standard
@@ -606,6 +675,27 @@ sideways false
 status collapsed
 
 \begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+RequestVoteArgs结构体字段
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:2.2"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
@@ -613,25 +703,29 @@ status collapsed
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 字段名称
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 类型
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -642,7 +736,7 @@ status collapsed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -651,7 +745,7 @@ Term
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -660,7 +754,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -671,7 +765,7 @@ Candidate所在的任期
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -680,7 +774,7 @@ CandidateId
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -689,7 +783,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -700,15 +794,6 @@ Candidate的ID
 </cell>
 </row>
 </lyxtabular>
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-RequestVoteArgs结构体字段
-\end_layout
 
 \end_inset
 
@@ -729,7 +814,17 @@ RequestVoteReply Structure
 \end_layout
 
 \begin_layout Standard
-定义收到投票请求的的投票反馈结构体RequestVoteReply，它的字段如下：
+定义收到投票请求的的投票反馈结构体RequestVoteReply，它的字段如表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:2.3"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
 \end_layout
 
 \begin_layout Standard
@@ -737,9 +832,30 @@ RequestVoteReply Structure
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+RequestVoteReply结构体字段
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:2.3"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
@@ -747,25 +863,29 @@ status collapsed
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 字段名称
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 类型
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -776,7 +896,7 @@ status collapsed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -785,7 +905,7 @@ Term
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -794,7 +914,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -805,7 +925,7 @@ int
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -814,7 +934,7 @@ VoteGranted
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -823,7 +943,7 @@ bool
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -840,18 +960,6 @@ bool
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-RequestVoteReply结构体字段
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \end_inset
 
 
@@ -862,7 +970,17 @@ AppendEntryArgs Structure
 \end_layout
 
 \begin_layout Standard
-定义AppendEntryArgs结构体，这里它仅用于发送heartbeat，故无需任何的payload，此实验用到的字段如下：
+定义AppendEntryArgs结构体，这里它仅用于发送heartbeat，故无需任何的payload，此实验用到的字段如表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:2.4"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
 \end_layout
 
 \begin_layout Standard
@@ -870,9 +988,30 @@ AppendEntryArgs Structure
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+AppendEntryArgs结构体字段
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:2.4"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
 <features tabularvalignment="middle">
@@ -880,25 +1019,29 @@ status collapsed
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 字段名称
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+
+\series bold
 类型
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -909,7 +1052,7 @@ status collapsed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -918,7 +1061,7 @@ Term
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -927,7 +1070,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -938,7 +1081,7 @@ Leader的任期
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -947,7 +1090,7 @@ LeaderId
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -956,7 +1099,7 @@ int
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -973,18 +1116,6 @@ Leader节点的ID
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-AppendEntryArgs结构体字段
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \end_inset
 
 
@@ -992,6 +1123,14 @@ AppendEntryArgs结构体字段
 
 \begin_layout Section
 实现handler
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-4,key-5,key-6"
+literal "false"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -1060,7 +1199,8 @@ Leader handler
 \end_layout
 
 \begin_layout Standard
-作为Leade周期性发送heartbeat给集群中的其他Server。具体实现见raft.go中的handleLeader方法。
+作为Leader，需要周期性发送heartbeat给集群中的其他Server以告知其他Server自己还在正常工作，具体实现见raft.go中的handleLea
+der方法。
 \end_layout
 
 \begin_layout Section
@@ -1069,7 +1209,17 @@ Leader handler
 
 \begin_layout Standard
 总体的选举过程可以看作一个状态机的状态转换，每台机器都在Follower/Candidate/Leader间进行状态转换，它们之间的转换遵循上一章所讲的选举算法
-，状态转换模式如下：
+，状态转换模式如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
 \end_layout
 
 \begin_layout Standard
@@ -1092,8 +1242,10 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Raft Server状态转换图
-\end_layout
+Raft Server状态转换函数
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.1"
 
 \end_inset
 
@@ -1105,11 +1257,16 @@ Raft Server状态转换图
 
 \end_layout
 
-\begin_layout Section
+\end_inset
+
+
+\end_layout
+
+\begin_layout Chapter
 实现演示
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 实验环境
 \end_layout
 
@@ -1125,12 +1282,22 @@ Raft Server状态转换图
 golang版本：go1.11.2 darwin/amd64
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 结果展示
 \end_layout
 
 \begin_layout Standard
-效果图如下：
+效果图如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:3.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
 \end_layout
 
 \begin_layout Standard
@@ -1154,6 +1321,13 @@ status open
 
 \begin_layout Plain Layout
 效果图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:3.1"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
