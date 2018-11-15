@@ -318,7 +318,7 @@ noprefix "false"
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
@@ -343,7 +343,7 @@ name "tab:2.1"
 \begin_layout Plain Layout
 \align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="10" columns="3">
+<lyxtabular version="3" rows="11" columns="3">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -463,6 +463,35 @@ int
 
 \begin_layout Plain Layout
 当前peer在peers数组中的下标
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+state
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ServerState
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+当前peer的状态
 \end_layout
 
 \end_inset
@@ -663,7 +692,7 @@ RequestVoteArgs Structure
 \end_layout
 
 \begin_layout Standard
-定义请求投票的RPC参数数据结构RequestVoteArgs，它的字段如表
+定义请求投票的RPC参数数据结构RequestVoteArgs，本次实验所用到的字段如表
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:2.2"
@@ -814,16 +843,12 @@ Candidate的ID
 
 \end_layout
 
-\begin_layout Standard
-其余字段在选举阶段不使用，故不单独列出。
-\end_layout
-
 \begin_layout Subsection
 RequestVoteReply Structure
 \end_layout
 
 \begin_layout Standard
-定义收到投票请求的的投票反馈结构体RequestVoteReply，它的字段如表
+定义收到投票请求的的投票反馈结构体RequestVoteReply，本次实验所用到的字段如表
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:2.3"
