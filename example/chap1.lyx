@@ -112,7 +112,7 @@ LatexCommand tableofcontents
 \end_layout
 
 \begin_layout Standard
-本次实验的实验目标是：在给定的实验框架下，用go语言实现分布式一致性算法Raft的Leader Election部分，并通过与Leader Election相关
+本次实验的实验目标是：在给定的实验框架下，用Go语言实现分布式一致性算法Raft的Leader Election部分，并通过与Leader Election相关
 的测试用例。
 \end_layout
 
@@ -1272,7 +1272,7 @@ name "fig:2.1"
 \end_layout
 
 \begin_layout Chapter
-实现演示
+实现演示与总结
 \end_layout
 
 \begin_layout Section
@@ -1314,7 +1314,7 @@ noprefix "false"
 placement h
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -1347,6 +1347,27 @@ name "fig:3.1"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+总结
+\end_layout
+
+\begin_layout Standard
+本次实验主要实现了分布式一致性算法Raft的Leader Election部分，从选举算法本身来说难度不大。我在本次实验中首先遇到的难题是对Go语言的一无所知，
+所以我也从网上找了一些有关于Go语言的入门教程来看，算是一边入一边完成相关实验。
+\end_layout
+
+\begin_layout Standard
+对于数据结构和算法的设计参看了Raft论文
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-3"
+literal "false"
+
+\end_inset
+
+和MIT的一些相关课程的资料，这让我进一步了解了Raft选举的流程。
 \end_layout
 
 \begin_layout Bibliography
