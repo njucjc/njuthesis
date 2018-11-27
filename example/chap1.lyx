@@ -78,7 +78,7 @@
 \begin_body
 
 \begin_layout Title
-Assignment 1: Raft Leader Election
+Assignment 2: 中文命名实体识别 
 \end_layout
 
 \begin_layout Author
@@ -91,7 +91,7 @@ Assignment 1: Raft Leader Election
 \end_layout
 
 \begin_layout Date
-2018年11月14日
+2018年11月27日
 \end_layout
 
 \begin_layout Standard
@@ -104,91 +104,59 @@ LatexCommand tableofcontents
 \end_layout
 
 \begin_layout Chapter
-实验分析
+实验总览
 \end_layout
 
 \begin_layout Section
-实验目标
+任务描述
 \end_layout
 
 \begin_layout Standard
-本次实验的实验目标是：在给定的实验框架下，用Go语言实现分布式一致性算法Raft的Leader Election部分，并通过与Leader Election相关
-的测试用例。
+本次实验的任务是：用自然语言处理及机器学习的方式从分好词的测试集中识别出其中包含的命名实体（Named Entity）。具体来说，本次实验要求识别出人名（PER
+SON）、地点（LOCATION）、时间（TIME）及机构名（ORGANIZATION）等命名实体。
 \end_layout
 
 \begin_layout Section
-Raft Leader Election概览
+背景简介
+\end_layout
+
+\begin_layout Standard
+命名实体识别（Named Entity Recognition, NER）是自然语言处理中的一项基础任务，狭义上，就是指从一段文本中识别出人名、地名组织机构名等
+专有名词，在特定领域中它可能有不同的指代
 \begin_inset CommandInset citation
 LatexCommand cite
-key "key-1,key-2"
+key "NER-blog"
 literal "false"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Subsection
-角色/状态（Server State）
+。
 \end_layout
 
 \begin_layout Standard
-Raft把一个分布式集群的所有服务器分为三种状态，在任意时刻，集群中的服务器只能是以下三种状态之一：
-\end_layout
-
-\begin_layout Itemize
-Leader：集中处理所有与客户端的交互，以及与其他Server间的日志同步（同一时刻至多一个）。
-\end_layout
-
-\begin_layout Itemize
-Follower：集群刚启动的时候，所有Server均处于Follower的状态，被动响应Leader的请求。
-\end_layout
-
-\begin_layout Itemize
-Candidate：用于选举出新的Leader的中间状态。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Separator plain
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-在正常的状态下，一个集群的状态应该是：唯一一个Leader，其他的都为Follower，其状态转移的过程如图
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:1.1"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Standard
+\noindent
 \begin_inset Float figure
+placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
+\align center
 \begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/raft.png
-	lyxscale 50
-	height 4.5cm
-	rotateOrigin center
+	filename /Users/jim/Code/njuthesis/res/pic1-1.png
+	height 1cm
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Raft Server状态转换图
+一个例子
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:1.1"
@@ -208,71 +176,34 @@ name "fig:1.1"
 
 \end_layout
 
-\begin_layout Subsection
-任期（Term）
-\end_layout
-
 \begin_layout Standard
-在Raft中，时间被划分成一个个的Term，每个Term都有一个编号，这个编号是单向递增且从未被使用过的。在每个Term的前面一小部分用于选举出新的Leader
-，若选举成功，则这个Term的剩余时间将由选出的Leader来统治。
-\end_layout
+如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:1.1"
+plural "false"
+caps "false"
+noprefix "false"
 
-\begin_layout Standard
-Raft算法保证在一个Term里至多由一个Leader来统治，其余选举失败的Server将自动变回Follower。需要注意的是并非每个Term内都有Leade
-r，若所有的Candidate所获得的选票都没有过半，则此次选举失败，并开始下一轮选举。
-\end_layout
-
-\begin_layout Subsection
-选举算法
-\end_layout
-
-\begin_layout Standard
-Raft采用heartbeat机制来触发一次Leader的选举。Leader在其任期内必须周期性地向各个Follower发送heartbeat或正常的RPC请求
-，以宣誓自己的领导主权。当Follower在一段时间内（Election timeout）没有收到请求，则认为系统集群已经没有Leader了，触发一次选举的流程
-。
-\end_layout
-
-\begin_layout Standard
-选举流程如下：
-\end_layout
-
-\begin_layout Itemize
-集群刚启动的时候，将所有的Server都设为Follower，不设置Leader，期间所有的Server都在等待RPC请求，直到一部分Server触发timeo
-ut，开始参加竞选Leader。
-\end_layout
-
-\begin_layout Itemize
-参加竞选的Follower的第一件事是增大自的当前Term值，然后将状态转换为Candidate状态。
-\end_layout
-
-\begin_layout Itemize
-转换为Candidate状态后的第一件事就是为自己投上一票，然后向所有其他Server发送RequestVote RPC为自己拉取选票。
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-当某个Candidate得到半数以上的Server的投票之后，立即向所有其他Server发送heartbeat，宣誓自己的主权。
-\end_layout
-
-\begin_layout Itemize
-若Candidate收到了来自Leader（其他Candidate竞选成功）的RPC请求则立即回到Follower的状态。
-\end_layout
-
-\begin_layout Itemize
-若以上两种情况都没有发生，表明Election timeout，即没有选举出新的Leader，进入下一轮选举。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Separator plain
 \end_inset
 
-
+所示，我们可以从图中的句子里提取出“李华/PER”、“共青团/ORG”、“上海/LOC”这几个命名实体。
 \end_layout
 
-\end_deeper
 \begin_layout Standard
-为了尽量在每次选举中都能成功选举出Leader，Raft的Election timeout是在一个区间里随机选择的，尽量把Server的选举时间分散到不同的时间
-，从而减少平票或选票不足的情况。
+汉语的命名实体识别相较于英语等其它语言来说，往往更具有挑战性，原因有以下几点：
+\end_layout
+
+\begin_layout Itemize
+在中文文本中不存在词与词之间的显式分割符，对于汉语来说，词与词之间的界限难以界定。不过这一点在本次实验不复存在，因为给定的文本已经是分好词的。
+\end_layout
+
+\begin_layout Itemize
+汉语博大精深，在中文文本中同一个词在不同语境中所表达的含义可能不同，更有广泛存在的汉语简化表达，如“南大”等。
+\end_layout
+
+\begin_layout Itemize
+命名实体可能出现嵌套，例如“南京大学附属中学”这一机构名可能会被误报为“南京大学”这一机构名。
 \end_layout
 
 \begin_layout Chapter
@@ -280,970 +211,43 @@ ut，开始参加竞选Leader。
 \end_layout
 
 \begin_layout Standard
-由于实验给了框架代码和大致的实验流程，所以接下来的工作都围绕着框架代码进行就可以了。
-\end_layout
-
-\begin_layout Section
-数据结构
+本次实验采用了带有条件随机场（CRF）层的双向长短期记忆神经网络（BiLSTM）
 \begin_inset CommandInset citation
 LatexCommand cite
-key "key-4,key-5,key-6,key-3"
+key "seq-tag"
 literal "false"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Subsection
-Raft Structure
-\end_layout
-
-\begin_layout Standard
-定义了一个Raft服务器的结构体，它的字段如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.1"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Raft结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.1"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="11" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-mu
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-sync.Mutex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-互斥量，用于同步
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-peers
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-[]*labrpc.ClientEnd
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-集群的中Servers
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-me
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-当前peer在peers数组中的下标
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-state
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ServerState
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-当前peer的状态
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-currentTerm
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Server当前所在的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-votedFor
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-为候选人投票
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-candidateToFollower
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-chan int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-通知Candidate变回Follower的channel
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-leaderToFollower
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-chan int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-通知Leader变回Follower的channel
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-heartbeat
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-chan int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-发送heartbeat的channel
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-electionTimer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-*time.Timer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-选举超时计时器
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-还有一些字段在Election阶段没有使用，这里不再说明。
-\end_layout
-
-\begin_layout Subsection
-RequestVoteArgs Structure
-\end_layout
-
-\begin_layout Standard
-定义请求投票的RPC参数数据结构RequestVoteArgs，本次实验所用到的字段如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.2"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-RequestVoteArgs结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.2"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Candidate所在的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-CandidateId
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Candidate的ID
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-RequestVoteReply Structure
-\end_layout
-
-\begin_layout Standard
-定义收到投票请求的的投票反馈结构体RequestVoteReply，本次实验所用到的字段如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.3"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-RequestVoteReply结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.3"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-当前任期，用于Candidate更新自己的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-VoteGranted
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-bool
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-表示是否为Candidate投票
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-AppendEntryArgs Structure
-\end_layout
-
-\begin_layout Standard
-定义AppendEntryArgs结构体，这里它仅用于发送heartbeat，故无需任何的payload，此实验用到的字段如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.4"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-AppendEntryArgs结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.4"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Leader的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-LeaderId
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Leader节点的ID
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-实现handler
+模型，代码实现主要是基于Tensorflow
 \begin_inset CommandInset citation
 LatexCommand cite
-key "key-4,key-5,key-6"
+key "tensorflow"
 literal "false"
 
 \end_inset
 
+这一深度学习框架，并利用对已有的开源实现
+\begin_inset CommandInset citation
+LatexCommand cite
+key "chinesener"
+literal "false"
 
-\end_layout
+\end_inset
 
-\begin_layout Subsection
-RequestVote RPC handler
-\end_layout
-
-\begin_layout Standard
-对应于框架代码中raft.go的RequestVote方法：
-\end_layout
-
-\begin_layout Itemize
-收到的任期小于当前任期：回复当前任期给Candidate，并表示不投票给请求投票的Canditate。
-\end_layout
-
-\begin_layout Itemize
-收到的任期大于当前任期：将本服务器的当前任期置为收到的任期，若当前服务器未投过票就给当前请求的Candidate投票。
+进行扩充，以满足本次实验的要求。
 \end_layout
 
 \begin_layout Standard
-具体细节见代码。
-\end_layout
-
-\begin_layout Subsection
-Election timeout handler
-\end_layout
-
-\begin_layout Standard
-只需重置当前Raft Server的electionTimer，具体实现对应于raft.go中的handleTimeout方法。
-\end_layout
-
-\begin_layout Subsection
-Follower handler
-\end_layout
-
-\begin_layout Standard
-作为Follower只需不断监听来自Leader的RPC请求，如果超时则自己参选Leader（变为Candidate），具体实现对应于raft.go中的handl
-eFollower方法。
-\end_layout
-
-\begin_layout Subsection
-Candidate handler
-\end_layout
-
-\begin_layout Standard
-作为Candidate需要监听三个事件：
-\end_layout
-
-\begin_layout Itemize
-是否竞选成功（获得过半选票）。
-\end_layout
-
-\begin_layout Itemize
-是否选举超时（进入下一轮选举）。
-\end_layout
-
-\begin_layout Itemize
-是否收到其他Server的RPC请求（别的Candidate竞选成功）。
-\end_layout
-
-\begin_layout Standard
-具体实现查看raft.go下的handleCandidate方法。
-\end_layout
-
-\begin_layout Subsection
-Leader handler
-\end_layout
-
-\begin_layout Standard
-作为Leader，需要周期性发送heartbeat给集群中的其他Server以告知其他Server自己还在正常工作，具体实现见raft.go中的handleLea
-der方法。
+在本章节的剩余部分，我将阐述训练模型的具体流程，以及为何要使用BiLSTM-CRF模型来完成本次实验。
 \end_layout
 
 \begin_layout Section
-总体实现
+Word Embedding
 \end_layout
 
 \begin_layout Standard
-总体的选举过程可以看作一个状态机的状态转换，每台机器都在Follower/Candidate/Leader间进行状态转换，它们之间的转换遵循上一章所讲的选举算法
-，状态转换模式如图
+使用模型处理文本的第一步就是将文本转换成数学表述（向量），最简单的做法就是将词典中的每一个词都用一个one-hot向量来表示，如图
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:2.1"
@@ -1257,26 +261,29 @@ noprefix "false"
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
-placement h
+placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
+\align center
 \begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/state_code.png
-	lyxscale 50
-	height 7cm
-	rotateOrigin center
+	filename /Users/jim/Code/njuthesis/res/one-hot.jpg
+	height 5cm
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Raft Server状态转换函数
+one-hot表示
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:2.1"
@@ -1296,6 +303,96 @@ name "fig:2.1"
 
 \end_layout
 
+\begin_layout Standard
+但是，这种表示方式存在两个明显的缺陷：
+\end_layout
+
+\begin_layout Itemize
+one-hot向量的纬度与词汇表的大小相等，容易造成纬度灾难（几百万的词汇量）。
+\end_layout
+
+\begin_layout Itemize
+one-hot的形式隐含了所有的单词都是独立的，然而现实中的有许多词汇的意思都是相近的，one-hot的表示无法体现单词与单词之间的联系。例如“girl”和“w
+oman”都包含有女性的含义，但在one-hot的表示中这种关系就无法表达。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Word Embeding就解决了这两个问题，它的主要思想如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示，将单词高维的one-hot向量表示投影到一个低维的空间中，并试图通过探索词的上下文信息，来使得在这个低维的空间中表示中，具有相近词义的单词能够具有较近的“
+距离”。具体细节可以参看文献
+\begin_inset CommandInset citation
+LatexCommand cite
+key "word2vec"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Code/njuthesis/res/skip_gram_net_arch.png
+	height 7cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Word Embedding示意图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.2"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+BiLSTM模型
+\end_layout
+
 \begin_layout Chapter
 实现演示与总结
 \end_layout
@@ -1304,159 +401,73 @@ name "fig:2.1"
 实验环境
 \end_layout
 
-\begin_layout Standard
-实验环境配置如下：
-\end_layout
-
-\begin_layout Itemize
-操作系统：macOS Mojave 10.14.1
-\end_layout
-
-\begin_layout Itemize
-golang版本：go1.11.2 darwin/amd64
-\end_layout
-
 \begin_layout Section
 结果展示
-\end_layout
-
-\begin_layout Standard
-效果图如图
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:3.1"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/show.png
-	lyxscale 50
-	height 3cm
-	rotateOrigin center
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-效果图
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:3.1"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Section
 总结
 \end_layout
 
-\begin_layout Standard
-本次实验主要实现了分布式一致性算法Raft的Leader Election部分，从选举算法本身来说难度不大。我在本次实验中首先遇到的难题是对Go语言的一无所知，
-所以我从网上找了一些有关于Go语言的入门教程来看，算是一边入门一边完成相关实验。
-\end_layout
-
-\begin_layout Standard
-对于数据结构和算法的设计参看了Raft论文
-\begin_inset CommandInset citation
-LatexCommand cite
-key "key-3"
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "NER-blog"
 literal "false"
 
 \end_inset
 
-和MIT的一些相关课程的资料，这让我进一步理解了Raft选举的流程。
+https://www.cnblogs.com/Determined22/p/7238342.html
 \end_layout
 
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "key-1"
+key "word2vec"
+literal "false"
 
 \end_inset
 
-https://www.jianshu.com/p/ee7646c0f4cf
+http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/
 \end_layout
 
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "key-2"
+key "chinesener"
+literal "false"
 
 \end_inset
 
-http://www.cnblogs.com/hzmark/p/raft.html
+https://github.com/zjy-ucas/ChineseNER
 \end_layout
 
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "key-4"
+key "seq-tag"
+literal "false"
 
 \end_inset
 
-https://github.com/sunhay/mit-6.824-2017
+Huang, Zhiheng, Wei Xu, and Kai Yu.
+ "Bidirectional LSTM-CRF models for sequence tagging." arXiv preprint arXiv:1508.0
+1991 (2015).
 \end_layout
 
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "key-5"
+key "tensorflow"
+literal "false"
 
 \end_inset
 
-https://github.com/bin2415
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "key-6"
-
-\end_inset
-
-https://github.com/bysui/mit6.824
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "key-3"
-
-\end_inset
-
-Ongaro, Diego, and John K.
- Ousterhout.
- "In search of an understandable consensus algorithm." USENIX Annual Technical
- Conference.
- 2014.
+Abadi, Martín, et al.
+ "Tensorflow: a system for large-scale machine learning." OSDI.
+ Vol.
+ 16.
+ 2016.
 \end_layout
 
 \end_body
