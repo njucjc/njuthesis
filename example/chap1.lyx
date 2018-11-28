@@ -199,7 +199,7 @@ noprefix "false"
 \end_layout
 
 \begin_layout Itemize
-汉语博大精深，在中文文本中同一个词在不同语境中所表达的含义可能不同，更有广泛存在的汉语简化表达，如“南大”等。
+汉语言博大精深，在中文文本中同一个词在不同语境中所表达的含义可能不同；更有广泛存在的汉语简化表达，如“南大”等。
 \end_layout
 
 \begin_layout Itemize
@@ -247,7 +247,7 @@ Word Embedding
 \end_layout
 
 \begin_layout Standard
-使用模型处理文本的第一步就是将文本转换成数学表述（向量），最简单的做法就是将词典中的每一个词都用一个one-hot向量来表示，如图
+使用模型处理文本的第一步就是将文本转换成数学表述（向量），其中最简单的做法就是将词典中的每一个词都用一个one-hot向量来表示，如图
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:2.1"
@@ -308,12 +308,12 @@ name "fig:2.1"
 \end_layout
 
 \begin_layout Itemize
-one-hot向量的纬度与词汇表的大小相等，容易造成纬度灾难（几百万的词汇量）。
+one-hot向量的维度与词汇表的大小相等，容易造成维度灾难（几百万的词汇量就要用几百万维的向量表示）。
 \end_layout
 
 \begin_layout Itemize
-one-hot的形式隐含了所有的单词都是独立的，然而现实中的有许多词汇的意思都是相近的，one-hot的表示无法体现单词与单词之间的联系。例如“girl”和“w
-oman”都包含有女性的含义，但在one-hot的表示中这种关系就无法表达。
+one-hot的形式隐含了所有的单词都是独立正交的，然而在现实中，有许多词汇的意思是相近的，one-hot的表示无法体现出单词与单词之间的联系。例如“girl”
+和“woman”都包含有女性的含义，但在one-hot的表示中这种关系就无法表达。
 \end_layout
 
 \begin_layout Standard
@@ -324,7 +324,7 @@ oman”都包含有女性的含义，但在one-hot的表示中这种关系就无
 \end_layout
 
 \begin_layout Standard
-Word Embeding就解决了这两个问题，它的主要思想如图
+Word Embedding就解决了这两个问题，它的主要思想如图
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:2.2"
@@ -334,16 +334,16 @@ noprefix "false"
 
 \end_inset
 
-所示，将单词高维的one-hot向量表示投影到一个低维的空间中，并试图通过探索词的上下文信息，来使得在这个低维的空间中表示中，具有相近词义的单词能够具有较近的“
-距离”。具体细节可以参看文献
+所示，即将单词高维的one-hot向量表示投影到一个低维的空间中，并试图通过探索词的上下文信息，来使得在这个低维的空间中表示中，具有相近词义的单词能够具有较近的
+“距离”。具体细节可以参看文献
 \begin_inset CommandInset citation
 LatexCommand cite
-key "word2vec"
+key "word2vec2"
 literal "false"
 
 \end_inset
 
-
+。
 \end_layout
 
 \begin_layout Standard
@@ -389,8 +389,215 @@ name "fig:2.2"
 
 \end_layout
 
+\begin_layout Standard
+关于Word Embedding的实现，现在已经有很多完备的开源工具可以使用，例如谷歌团队的Word2Vec
+\begin_inset CommandInset citation
+LatexCommand cite
+key "word2vec2"
+literal "false"
+
+\end_inset
+
+或GloVe
+\begin_inset CommandInset citation
+LatexCommand cite
+key "glove"
+literal "false"
+
+\end_inset
+
+，我们只需要提供语料并利用现有的任意工具训练得到词向量表示即可。
+\end_layout
+
 \begin_layout Section
 BiLSTM模型
+\end_layout
+
+\begin_layout Standard
+通过Word Embedding我们得到了词的向量表示，到此我们已经迈出了任务的第一步，接下来，我们就要利用训练得到词向量来表达我们的文本数据，并将它用于训练模
+型。
+\end_layout
+
+\begin_layout Subsection
+什么是LSTM和BiLSTM
+\end_layout
+
+\begin_layout Standard
+LSTM是RNN的一种，由于其设计特点，非常适用于对时序数据的建模，如文本数据，BiLSTM是由前向LSTM和后向LSTM组合而成的双向LSTM，它们都常在自然
+语言处理中用于对上下文信息的建模。
+\end_layout
+
+\begin_layout Subsection
+为什么使用BiLSTM
+\end_layout
+
+\begin_layout Standard
+前面我们已经提到了如何表达一个词，那么进一步，我们如何将词的表示组合成句子的表示呢？一种简单的思路就是将句子中出现的词的向量表示进行加和，但是这种方法忽视了词语
+在句子中的前后上下文信息。而使用LSTM模型可以更好的捕捉到较长距离的依赖关系。因为LSTM通过训练过程可以学到记忆哪些信息和遗忘哪些信息。
+\end_layout
+
+\begin_layout Standard
+但是利用LSTM对句子进行建模还存在一个问题：无法编码从后到前的信息。因此，我们需要用一个双向的LSTM模型来表达一个句子，它能让我们更好地捕捉双向的语义依赖。
+\end_layout
+
+\begin_layout Standard
+具体到我们的实验任务上，BiLSTM模型能够对我们输入句子的每一个词（或字）的所属标签的概率
+\begin_inset Formula $\begin{alignedat}{1}\end{alignedat}
+$
+\end_inset
+
+进行打分，指导我们做下一步的工作。
+\end_layout
+
+\begin_layout Section
+CRF层
+\end_layout
+
+\begin_layout Standard
+条件随机场（CRF）的目标函数不仅考虑输入的状态特征函数，而且还包含了标签转移特征函数。在已知模型时，给输入序列求预测输出序列即求使目标函数最大化的最优序列，是
+一个动态规划问题，可以使用Viterbi算法解码来得到最优标签序列。CRF的优点在于其为一个位置进行标注的过程中可以利用丰富的内部及上下文特征信息。
+\end_layout
+
+\begin_layout Section
+总体框架
+\end_layout
+
+\begin_layout Standard
+实现模型的总体框架如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.3"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
+\end_layout
+
+\begin_layout Itemize
+Word Embedding layer：将词转化为向量表示。
+\end_layout
+
+\begin_layout Itemize
+BiLSTM layer：输入句子中每个词的词向量表示，输出维度为tag size的向量，其中每个维度
+\begin_inset Formula $P_{i,j}$
+\end_inset
+
+表示每个词
+\begin_inset Formula $w_{i}$
+\end_inset
+
+到
+\begin_inset Formula $tag_{j}$
+\end_inset
+
+的非归一化概率。
+\end_layout
+
+\begin_layout Itemize
+CRF layer：存在一个转移矩阵A，则
+\begin_inset Formula $A_{i,j}$
+\end_inset
+
+代表
+\begin_inset Formula $tag_{i}$
+\end_inset
+
+转移到
+\begin_inset Formula $tag_{j}$
+\end_inset
+
+的转移概率，对于输入序列X对应的输出tag序列y，定义分数为：
+\begin_inset Formula 
+\[
+score(X,y)=\sum A_{y_{i},y_{i+1}}+\sum P_{i,y_{i}}
+\]
+
+\end_inset
+
+可以看出整个序列的打分等于各个位置的打分之和，而每个位置的打分由LSTM与转移矩阵A的输出决定，进而利用Softmax得到归一化后的概率：
+\begin_inset Formula 
+\[
+p\text{(y|X)}=\frac{exp(score(X,y))}{\sum exp(X,y^{'})}
+\]
+
+\end_inset
+
+其中
+\begin_inset Formula $y^{'}$
+\end_inset
+
+是所有tag序列（包括不可能的序列）中的任意一个。在训练中只需要最大化似然概率
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $p(y|X)$
+\end_inset
+
+即可，这里我们使用对数似然：
+\begin_inset Formula $log(p(y|X)\text{)}$
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+模型在预测过程中利用动态规划的Viterbi算法来求解最优路径，也即最终的tag序列。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Code/njuthesis/res/total.png
+	height 9cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+模型总体框架意图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.3"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
@@ -401,12 +608,279 @@ BiLSTM模型
 实验环境
 \end_layout
 
+\begin_layout Standard
+实验环境及依赖如下：
+\end_layout
+
+\begin_layout Itemize
+操作系统：macOS Mojave 10.14.1 
+\end_layout
+
+\begin_layout Itemize
+处理器：3.6 GHz Intel Core i7-7700
+\end_layout
+
+\begin_layout Itemize
+内存：32GB
+\end_layout
+
+\begin_layout Itemize
+Python版本：3.6
+\end_layout
+
+\begin_layout Itemize
+Tensorflow版本：1.2.0（CPU版本）
+\end_layout
+
+\begin_layout Itemize
+jieba版本：0.39
+\end_layout
+
+\begin_layout Section
+运行方式
+\end_layout
+
+\begin_layout Subsection
+预处理
+\end_layout
+
+\begin_layout Standard
+由于我的实现是基于已有的github上的开源代码
+\begin_inset CommandInset citation
+LatexCommand cite
+key "chinesener"
+literal "false"
+
+\end_inset
+
+来做的，故我们需要对我们的训练集格式进行修改，具体来说，我们需要将训练集进行从基于“词”的打标方式修改为基于“字”的打标方式，转化规则如表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:3.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。训练完模型后，预测时输出的标签也是基于“字”的，所以我们还要将它转化回来。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+词标签和字标签的转换规则
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:3.1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+词标签
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+字标签
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+O
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+对词中的每个字都标为O
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+B-xxx
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+对词中的第一个字标为B-xxx，其余标为I-xxx
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+I-xxx
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+对词中的每个字都标为I-xxx
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+O-xxx
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+对词中的每个字都标为I-xxx
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+还有一点就是，调完参之后，我们可以将dev数据集也加入到训练集（增加训练数据）中重新训练模型，并关掉交叉验证的部分代码提升训练效率（在我的代码中已经做好了这些事
+情，所有的数据均在data/目录下）。
+\end_layout
+
+\begin_layout Subsection
+训练
+\end_layout
+
+\begin_layout Standard
+$ python3 main.py --train=True --clean=True
+\end_layout
+
+\begin_layout Subsection
+预测
+\end_layout
+
+\begin_layout Standard
+$ python3 main.py
+\end_layout
+
 \begin_layout Section
 结果展示
 \end_layout
 
+\begin_layout Standard
+如Leaderboard所示，F1值为0.956029
+\end_layout
+
+\begin_layout Section
+遇到的问题
+\end_layout
+
+\begin_layout Standard
+我遇到如下问题：
+\end_layout
+
+\begin_layout Itemize
+Tensorflow版本 + CUDA版本 + Python版本有严格的对应关系，如果它们的版本不匹配，可能会导致Tensorflow无法正常工作。
+\end_layout
+
+\begin_layout Standard
+由于时间关系，Tensorflow最后没有采用GPU版本，改用CPU版本。
+\end_layout
+
 \begin_layout Section
 总结
+\end_layout
+
+\begin_layout Standard
+我对本次实验的总结如下：
+\end_layout
+
+\begin_layout Itemize
+基于“字”打标签的方式训练出的模型优与基于“词”打标签方式训练出的模型，我猜想原因是中文词的粒度太大，且语料不足导致未见词过多，因而模型“学习不足”。
+\end_layout
+
+\begin_layout Itemize
+每次“喂”给模型的句子长度不要过长（对每一行数据可以以句号为分隔符划分数据），太长的句子可能会让概率计算的可信度降低。
+\end_layout
+
+\begin_layout Itemize
+调参结束后将dev加入训练集，重新训练模型。
+\end_layout
+
+\begin_layout Standard
+注：本文所用图片基本来源于网络和各个文献，再此致谢。
 \end_layout
 
 \begin_layout Bibliography
@@ -423,12 +897,15 @@ https://www.cnblogs.com/Determined22/p/7238342.html
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "word2vec"
+key "glove"
 literal "false"
 
 \end_inset
 
-http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/
+Pennington, Jeffrey, Richard Socher, and Christopher Manning.
+ "Glove: Global vectors for word representation." Proceedings of the 2014
+ conference on empirical methods in natural language processing (EMNLP).
+ 2014.
 \end_layout
 
 \begin_layout Bibliography
@@ -468,6 +945,19 @@ Abadi, Martín, et al.
  Vol.
  16.
  2016.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "word2vec2"
+literal "false"
+
+\end_inset
+
+Goldberg, Yoav, and Omer Levy.
+ "word2vec Explained: deriving Mikolov et al.'s negative-sampling word-embedding
+ method." arXiv preprint arXiv:1402.3722 (2014).
 \end_layout
 
 \end_body
