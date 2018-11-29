@@ -77,16 +77,173 @@
 
 \begin_body
 
+\begin_layout Title
+实验二: 调用图分析
+\end_layout
+
+\begin_layout Author
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+成员姓名
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+学号
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+负责工作
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+陈锦赐
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MF1833004
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+实验二
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+李俊宥
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MG1833038
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+实验一
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+刘少聪
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MG1833048
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+实验三
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Date
+2018年12月03日
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand input
+filename "../build/frontmatter.lyx"
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 概览
 \end_layout
 
 \begin_layout Section
-背景简介
+引言
 \end_layout
 
 \begin_layout Standard
-调用图的相似的分析工作由来已久，研究的重点在于函数间相似性计算和函数调用图同构问题。文献
+调用图的相似度分析工作由来已久，研究的重点在于函数间相似性计算和函数调用图同构问题。文献
 \begin_inset CommandInset citation
 LatexCommand cite
 key "edit_dist"
@@ -94,7 +251,7 @@ literal "false"
 
 \end_inset
 
-提出函数调用图的图编辑距离的概念；文献
+提出函数调用图的图编辑距离的概念计算相似度；文献
 \begin_inset CommandInset citation
 LatexCommand cite
 key "二分图"
@@ -115,12 +272,20 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
-这些工作的目标都是根据程序调用图的相似性来检测其中的恶意代码，这与我们的工作目标（同一程序的不同版本间的调用图相似度）有所差异，但是，我们可以借鉴它们的基本思想
-来完成我们的工作。
+这些工作的目标都是根据程序调用图的相似性来检测其中的恶意代码，这与我们的工作目标（同一程序的不同版本间的调用图差异）有所出入，但是，我们可以借鉴它们的基本思想来
+完成我们的工作。
 \end_layout
 
 \begin_layout Standard
-本次我采用的思路与文献类似，主要用最大公共边数来衡量调用图的相似度，并实现了相似度比较工具JCallGraph
+本次我采用的思路与文献
+\begin_inset CommandInset citation
+LatexCommand cite
+key "common-edge"
+literal "false"
+
+\end_inset
+
+类似，主要用最大公共边数来衡量调用图的相似度，并实现了调用图差异比较工具JCallGraph
 \begin_inset CommandInset citation
 LatexCommand cite
 key "JCallgraph"
@@ -268,7 +433,7 @@ literal "false"
 \begin_inset Formula $G_{B}$
 \end_inset
 
-,目的是分析
+,工具的输出是
 \begin_inset Formula $G_{A}$
 \end_inset
 
@@ -276,11 +441,315 @@ literal "false"
 \begin_inset Formula $G_{B}$
 \end_inset
 
-,的差异，其整体框架流程如图所示：
+的差异，其整体框架流程如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:1.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示：
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Code/njuthesis/res/流程图.png
+	height 7cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+算法流程图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:1.1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+抽取调用图
+\end_layout
+
+\begin_layout Standard
+调用图的抽取采用的是一个开源工具java-callgraph
+\begin_inset CommandInset citation
+LatexCommand cite
+key "java-callgraph"
+literal "false"
+
+\end_inset
+
+，它能够根据输入的JAR包静态或动态地分析程序的调用关系图，这里我们仅使用了它静态分析的功能。
+\end_layout
+
+\begin_layout Standard
+为了应对Java程序开发中广泛存在的包重命名现象，我们对java-callgraph
+\begin_inset CommandInset citation
+LatexCommand cite
+key "java-callgraph"
+literal "false"
+
+\end_inset
+
+的输出结果进行了包名打平的操作，即只保留节点的类名和方法名。另外，由于技术关系，我们不考虑类重命名和方法重命名的情况。
+\end_layout
+
+\begin_layout Subsection
+调用图差异计算
+\end_layout
+
+\begin_layout Standard
+算法描述如下：
+\end_layout
+
+\begin_layout Enumerate
+任取
+\begin_inset Formula $V_{G_{A}}\text{∩}V_{G_{B}}$
+\end_inset
+
+中的任意节点
+\begin_inset Formula $f$
+\end_inset
+
+；
+\end_layout
+
+\begin_layout Enumerate
+从
+\begin_inset Formula $f$
+\end_inset
+
+出发分别对
+\begin_inset Formula $G_{A}$
+\end_inset
+
+和
+\begin_inset Formula $G_{B}$
+\end_inset
+
+进行BFS图遍历；
+\end_layout
+
+\begin_layout Enumerate
+在遍历的过程中记录
+\begin_inset Formula $G_{A}$
+\end_inset
+
+和
+\begin_inset Formula $G_{B}$
+\end_inset
+
+中边相同（起始节点和终止节点相同）的个数k，及边的总个数n（相同边不重复计数）；
+\end_layout
+
+\begin_layout Enumerate
+计算
+\begin_inset Formula $diff(A,B)=1-\frac{k}{n}$
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+这样计算调用图的差异的算法复杂度为
+\begin_inset Formula $O(|E_{G_{A}}|+|E_{G_{B}}|)$
+\end_inset
+
+，为线性的复杂度，控制算法的复杂度有利于我们在有限的时间内进行尽量多次的实验。
+\end_layout
+
+\begin_layout Section
+小结
+\end_layout
+
+\begin_layout Standard
+本章简述了关于程序调用图相似度分析的相关工作，并介绍了有关调用图分析的相关概念，且提出了衡量调用图相似程度及差异的算法。下一章我们将介绍我们的研究问题、实验结果
+以及根据实验结果得出的具体结论。
+\end_layout
+
+\begin_layout Chapter
+实验设计与分析
+\end_layout
+
+\begin_layout Section
+实验设计
+\end_layout
+
+\begin_layout Standard
+在我们的实验中我们将研究如下几个问题：
+\end_layout
+
+\begin_layout Itemize
+RQ1.连续的 Commit 间，调用图的变化可能有多大?
+\end_layout
+
+\begin_layout Itemize
+RQ2.连续的发布版本间，调用图的变化可能有多大?
+\end_layout
+
+\begin_layout Itemize
+RQ3.在什么情况下，相近的两次 Commit 会使得调用图发生大的变化?
+\end_layout
+
+\begin_layout Itemize
+RQ4.开发过程中，调用图有没有可能发生连续的大的变化?
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+我们采用控制变量法来研究这几个问题。其中因变量为：两程序调用图的差异值；自变量有两个：一是Commit，二是发行版本。各个自变量的取值如下：
+\end_layout
+
+\begin_layout Itemize
+Commit：各个Commit哈希值
+\end_layout
+
+\begin_layout Itemize
+发行版本：各个发行版本号
+\end_layout
+
+\begin_layout Section
+实验配置
+\end_layout
+
+\begin_layout Subsection
+实验环境
+\end_layout
+
+\begin_layout Standard
+本文实现的JCallGraph
+\begin_inset CommandInset citation
+LatexCommand cite
+key "JCallgraph"
+literal "false"
+
+\end_inset
+
+基于Java实现，用于本次实验的软硬件环境配置如表所示，包括CPU型号、主存大小、操作系统版本和JRE版本等信息。
 \end_layout
 
 \begin_layout Standard
 
+\end_layout
+
+\begin_layout Subsection
+数据集
+\end_layout
+
+\begin_layout Section
+实验结果及分析
+\end_layout
+
+\begin_layout Chapter
+总结与展望
+\end_layout
+
+\begin_layout Section
+总结
+\end_layout
+
+\begin_layout Section
+不足与展望
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "JCallgraph"
+literal "false"
+
+\end_inset
+
+https://github.com/njucjc/JCallGraph
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "java-callgraph"
+literal "false"
+
+\end_inset
+
+https://github.com/gousiosg/java-callgraph
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "edit_dist"
+literal "false"
+
+\end_inset
+
+Hu, Xin, Tzi-cker Chiueh, and Kang G.
+ Shin.
+ "Large-scale malware indexing using function-call graphs." Proceedings of
+ the 16th ACM conference on Computer and communications security.
+ ACM, 2009.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "二分图"
+literal "false"
+
+\end_inset
+
+刘星, and 唐勇.
+ "恶意代码的函数调用图相似性分析." 计算机工程与科学 36.3 (2014): 481-486.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "common-edge"
+literal "false"
+
+\end_inset
+
+Shang, Shanhu, et al.
+ "Detecting malware variants via function-call graph similarity." Malicious
+ and Unwanted Software (MALWARE), 2010 5th International Conference on.
+ IEEE, 2010.
 \end_layout
 
 \end_body
