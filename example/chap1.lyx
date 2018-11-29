@@ -666,7 +666,17 @@ literal "false"
 
 \end_inset
 
-基于Java实现，用于本次实验的软硬件环境配置如表所示，包括CPU型号、主存大小、操作系统版本和JRE版本等信息。
+基于Java实现，用于本次实验的软硬件环境配置如表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:2.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示，包括CPU型号、主存大小、操作系统版本和JRE版本等信息。
 \end_layout
 
 \begin_layout Standard
@@ -877,18 +887,6 @@ Hu, Xin, Tzi-cker Chiueh, and Kang G.
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "二分图"
-literal "false"
-
-\end_inset
-
-刘星, and 唐勇.
- "恶意代码的函数调用图相似性分析." 计算机工程与科学 36.3 (2014): 481-486.
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
 key "common-edge"
 literal "false"
 
@@ -898,6 +896,18 @@ Shang, Shanhu, et al.
  "Detecting malware variants via function-call graph similarity." Malicious
  and Unwanted Software (MALWARE), 2010 5th International Conference on.
  IEEE, 2010.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "二分图"
+literal "false"
+
+\end_inset
+
+刘星, and 唐勇.
+ "恶意代码的函数调用图相似性分析." 计算机工程与科学 36.3 (2014): 481-486.
 \end_layout
 
 \end_body
