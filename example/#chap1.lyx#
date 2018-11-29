@@ -78,11 +78,11 @@
 \begin_body
 
 \begin_layout Chapter
-概览
+背景简介
 \end_layout
 
 \begin_layout Section
-背景简介
+相关工作
 \end_layout
 
 \begin_layout Standard
@@ -116,19 +116,15 @@ literal "false"
 
 \begin_layout Standard
 这些工作的目标都是根据程序调用图的相似性来检测其中的恶意代码，这与我们的工作目标（同一程序的不同版本间的调用图相似度）有所差异，但是，我们可以借鉴它们的基本思想
-来完成我们的工作。
-\end_layout
-
-\begin_layout Standard
-本次我采用的思路与文献类似，主要用最大公共边数来衡量调用图的相似度，并实现了相似度比较工具JCallGraph
+来完成我们的工作。所以，本次我采用的思路与文献
 \begin_inset CommandInset citation
 LatexCommand cite
-key "JCallgraph"
+key "common-edge"
 literal "false"
 
 \end_inset
 
-。
+类似，主要用最大公共边数来衡量调用图的相似度。
 \end_layout
 
 \begin_layout Section
@@ -196,7 +192,7 @@ name "def:调用图"
 \end_layout
 
 \begin_layout Standard
-从而，依据最大公共边数占总边数的比例定义调用图相似度如下：
+从而，依据最大公共边数占总边数的比例定义调用图相似度如下。
 \end_layout
 
 \begin_layout Definition
@@ -213,7 +209,7 @@ name "def:调用图相似度"
 可以用如下公式表示：
 \begin_inset Formula 
 \[
-sim(A,B)=\frac{E_{G_{A}}∩E_{G_{B}}}{E_{G_{A}}\text{∪}E_{G_{B}}}
+sim(A,B)=\frac{E_{A}∩E_{B}}{E_{A}\text{∪}E_{B}}
 \]
 
 \end_inset
@@ -226,12 +222,6 @@ sim(A,B)=\frac{E_{G_{A}}∩E_{G_{B}}}{E_{G_{A}}\text{∪}E_{G_{B}}}
 \end_layout
 
 \begin_layout Definition
-\begin_inset CommandInset label
-LatexCommand label
-name "def:调用图的差异"
-
-\end_inset
-
 （调用图的差异）设同一程序的两个不同版本分别为A和B，则A与B的差异度
 \begin_inset Formula $diff(A,B)$
 \end_inset
@@ -239,47 +229,11 @@ name "def:调用图的差异"
 可以用如下公式表示：
 \begin_inset Formula 
 \[
-diff(A,B)=1-sim(A,B)
+diff(A,B)
 \]
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Section
-算法描述
-\end_layout
-
-\begin_layout Standard
-我实现的JCallGraph
-\begin_inset CommandInset citation
-LatexCommand cite
-key "JCallgraph"
-literal "false"
-
-\end_inset
-
-工具的输入为同一Java程序的两个不同版本A和B的调用图表示，这就要求我们先从JAR包中抽取出各个类的方法的调用关系图。记程序的其中一个版本A的调用图为
-\begin_inset Formula $G_{A}$
-\end_inset
-
-，版本B的调用图为
-\begin_inset Formula $G_{B}$
-\end_inset
-
-,目的是分析
-\begin_inset Formula $G_{A}$
-\end_inset
-
-与
-\begin_inset Formula $G_{B}$
-\end_inset
-
-,的差异，其整体框架流程如图所示：
-\end_layout
-
-\begin_layout Standard
 
 \end_layout
 
