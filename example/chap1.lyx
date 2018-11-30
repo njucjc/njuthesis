@@ -1479,6 +1479,11 @@ literal "false"
 解。
 \end_layout
 
+\begin_layout Standard
+还有一点是，由于我们采用的是利用图遍历的方式进行搜集两个调用图的公共边来度量两个调用图的差异，所以，它的时间复杂度比较低（尤其是比基于图的编辑距离算法要快很多）
+，有利于我们进行多次实验。
+\end_layout
+
 \begin_layout Section
 不足与展望
 \end_layout
