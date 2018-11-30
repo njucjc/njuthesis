@@ -684,7 +684,7 @@ noprefix "false"
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
@@ -789,7 +789,7 @@ Intel Core i7-7700@3.60GHz
 \begin_inset Text
 
 \begin_layout Plain Layout
-macOS Mojavee 10.14.1
+macOS Mojave 10.14.1
 \end_layout
 
 \end_inset
