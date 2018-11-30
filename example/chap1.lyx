@@ -615,7 +615,7 @@ literal "false"
 \end_layout
 
 \begin_layout Itemize
-RQ1.连续的 Commit 间，调用图的变化可能有多大?
+RQ1.连续的Commit间，调用图的变化可能有多大?
 \end_layout
 
 \begin_layout Itemize
@@ -623,7 +623,7 @@ RQ2.连续的发布版本间，调用图的变化可能有多大?
 \end_layout
 
 \begin_layout Itemize
-RQ3.在什么情况下，相近的两次 Commit 会使得调用图发生大的变化?
+RQ3.在什么情况下，相近的两次Commit会使得调用图发生大的变化?
 \end_layout
 
 \begin_layout Itemize
@@ -684,7 +684,7 @@ noprefix "false"
 placement h
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -831,8 +831,631 @@ Java(TM) SE Runtime Environment (build 1.8.0_192-b12)
 数据集
 \end_layout
 
+\begin_layout Standard
+本此实验采用的数据集是weka
+\begin_inset CommandInset citation
+LatexCommand cite
+key "weka"
+literal "false"
+
+\end_inset
+
+机器学习工具包，它总共包含9,568个Commit以及598个Release版本，是一个比较成熟的Java项目。
+\end_layout
+
 \begin_layout Section
 实验结果及分析
+\end_layout
+
+\begin_layout Subsection
+RQ1与RQ3的相关实验
+\end_layout
+
+\begin_layout Standard
+为了探究同一Java项目连续Commit间调用图的变化程度，我们首先从weka
+\begin_inset CommandInset citation
+LatexCommand cite
+key "weka"
+literal "false"
+
+\end_inset
+
+项目中抽取了最近的200个
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+仅选取最近200个Commit的原因是，离现在过于久远的Commit的软件环境与当前不兼容，如Java版本等。
+\end_layout
+
+\end_inset
+
+Commit作为探究对象。
+\end_layout
+
+\begin_layout Standard
+分别两两计算相邻Commit之间的调用图差异值，发现连续Commit之间的调用图差异微乎其微，基本都在
+\begin_inset Formula $10^{-3}\text{～}10^{-4}$
+\end_inset
+
+的量级，还有大约63.8%的差异值为0，由于这些数据都过于稀疏，故不单独绘制出图像来表示。
+\end_layout
+
+\begin_layout Standard
+因为连续的Commit间的调用图差异实在太小，我们自然而然地想进一步探究：到底多少个Commit之后才会出现调用图的“显著”变化。为此，我们设置Commit步长
+分别为10，20，40，80，160的对比实验，结果如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Code/njuthesis/res/commits.png
+	width 14cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+不同Commit间的调用图差异
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+的横坐标为Commit号i(i = 0 ~ 9)与(i + step)的调用图比较，纵坐标为差异百分比，统计这些数据的最大值/均值/最小值如表
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:2.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Commit间调用图差异数据统计
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:2.2"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Step
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+max/avg/min
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.055%/ 0.029%/ 0.001%
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+20
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.059%/ 0.055%/ 0.054%
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+40
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.118%/ 0.116%/ 0.114% 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+80
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.386%/ 0.378%/ 0.374%
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+160
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.661%/ 0.635%/ 0.563%
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+根据实验数据我们对RQ1的回答如下：
+\end_layout
+
+\begin_layout Itemize
+连续Commit之间的调用图差距及其微小，在我们的度量标准下，差别大约是
+\begin_inset Formula $10^{-3}\text{～}10^{-4}$
+\end_inset
+
+的量级，更有部分Commit间没有调用图差异变化。
+\end_layout
+
+\begin_layout Standard
+这比较符合我们的直觉，也符合软件开发的规律“单个的Commit不应该做过多的事情”，当然也有可能是我们选取的Commit段都是在软件的成熟期，在这个时期它往往不
+会做过多的功能添加，而更多的是对已有的功能做bug-fix。而对RQ1的衍生问题：“多少个Commit后，调用图才会发生显著变化？”的回答是，从我们的实验数据中
+可以看出，至少在间隔40以上的Commit之间才会存在相对较大的差异（设置阈值0.1%），且差异的大小与Commit的间隔几乎成线性关系。
+\end_layout
+
+\begin_layout Standard
+根据实验数据我们对RQ3的回答如下：
+\end_layout
+
+\begin_layout Itemize
+由于在我们的实验数据中相邻两次Commit间没有较大差异的情况，所以我们拓宽这个问题为：“在何种情况下，跨越一定步长的Commit之间的调用图会有较大变化”，针
+对这个问题，我们观察图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+中的“剧增”情况（如step=3～163），人工检测gitlog，发现这一段是对某个功能的添加。以此我们可以看出，当对软件进行功能添加时，调用图会产生较大的变动
+。
+\end_layout
+
+\begin_layout Itemize
+另外，虽然在数据中没有体现，但根据直觉我们还觉得对代码进行重构时，也会造成调用图的剧烈变化。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+RQ2与RQ4的相关实验
+\end_layout
+
+\begin_layout Standard
+为了探究同一Java项目连续发布版本间调用图的变化程度，我们选取weka
+\begin_inset CommandInset citation
+LatexCommand cite
+key "weka"
+literal "false"
+
+\end_inset
+
+项目的3.7版下的14个小版本（3.7.0 - 3.7.13）
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+仅选取小版本间的比较的原因是，几个大版本中间经历了Java版本使用的变迁，存在版本不兼容问题。
+\end_layout
+
+\end_inset
+
+作为探究对象。分别两两计算相邻发布版本间调用的差异，得到的结果如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Code/njuthesis/res/version.png
+	height 6cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+不同发行版本间的调用图差异
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.2"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+统计这些数据的最大值/均值/最小值数据如表所示。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+版本间调用图差异数据统计
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:2.3"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+类别
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+值
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+出现位置
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+最大值
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+25.0%
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.7.1与3.7.2的调用图差距
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+均值
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5.55%
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+—
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+最小值
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.01%
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.7.8与3.7.9的调用图差距
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+根据实验数据，我们对RQ2的回答如下：
+\end_layout
+
+\begin_layout Itemize
+在连续的发布版本间，调用图的变化，在我们的度量标准下大于在5.55%左右，峰值是25.5%（3.7.2版本为功能版本），最小值是0.01%（3.7.9版本为bug-fix版本
+）。
+\end_layout
+
+\begin_layout Itemize
+大部分版本更新的调用图变化率都在均值以下，只有极少数的版本更新调用图变化率远远高于均（重构和功能添加等）。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+最后，我们对RQ4的回答如下：
+\end_layout
+
+\begin_layout Itemize
+在我们的实验结果中，没有出现调用图连续剧烈变化的情况，很有可能是我们的数据都是在开发后期维护的时间点上采集的。
+\end_layout
+
+\begin_layout Itemize
+如果出现了连续调用图的变化，我想它可能会出现在软件开发的初期，但目前没有数据支持这一设想。
 \end_layout
 
 \begin_layout Chapter
@@ -843,8 +1466,48 @@ Java(TM) SE Runtime Environment (build 1.8.0_192-b12)
 总结
 \end_layout
 
+\begin_layout Standard
+总体上来说，完成了能够度量调用图差异的JCallGraph
+\begin_inset CommandInset citation
+LatexCommand cite
+key "JCallgraph"
+literal "false"
+
+\end_inset
+
+工具，并在weka上探索了在同一软件的不同版本间调用图的差异，且得到了一些初步的结论，在一定程度上回答了四个研究问题，让我们对调用图分析这个问题有了更深层次的理
+解。
+\end_layout
+
 \begin_layout Section
 不足与展望
+\end_layout
+
+\begin_layout Standard
+现在的主要不足有以下几点：
+\end_layout
+
+\begin_layout Itemize
+不能应对类和方法重命名的问题。
+\end_layout
+
+\begin_layout Itemize
+数据采样过于集中在软件开发的成熟期，忽视了软件开发初期和中期的情况。
+\end_layout
+
+\begin_layout Itemize
+数据集不足。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+未来希望有机会能够完善这两个问题，期望能够得到更加一般性的结论。
 \end_layout
 
 \begin_layout Bibliography
@@ -867,6 +1530,17 @@ literal "false"
 \end_inset
 
 https://github.com/gousiosg/java-callgraph
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "weka"
+literal "false"
+
+\end_inset
+
+https://github.com/bnjmn/weka
 \end_layout
 
 \begin_layout Bibliography
