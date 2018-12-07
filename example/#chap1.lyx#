@@ -166,8 +166,8 @@ filename "../build/frontmatter.lyx"
 \end_layout
 
 \begin_layout Standard
-本此实验的目标是：在给定的实验1“Raft Leader Election”的基础上，继续实现Raft的Log Consensus部分，为了完成这个目标，还需要
-对实验1中的Leader Election的算法进行扩充，即完善投票机制，以选取最佳的Leader,详细过程在下文列出。
+本此实验的目标是：在给定的实验一“Raft Leader Election”的基础上，继续实现Raft的Log Consensus部分，为了完成这个目标，还需要
+对实验一中的Leader Election的算法进行扩充，即完善投票机制，以选取最佳的Leader。
 \end_layout
 
 \begin_layout Section
@@ -1817,7 +1817,7 @@ noprefix "false"
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
@@ -2038,7 +2038,7 @@ Candidate的日志等于或多余接收者的日志，则接收者投票给Candi
 \end_layout
 
 \begin_layout Itemize
-上一条Log实体相应的Term和Index与目标不匹配，拒绝请求，返回false；
+上一条Log实体相应的Term和Index不匹配，拒绝请求，返回false；
 \end_layout
 
 \begin_layout Itemize
@@ -2087,98 +2087,11 @@ Persist函数的实现逻辑是将Raft的currentTerm、votedFor以及logs字段�
 \end_layout
 
 \begin_layout Itemize
-若因Log不一致而失败，则减少nextIndex发起重试
-\end_layout
 
-\begin_layout Itemize
-如果存在一个index满足index > commitIndex，并且大多数的matcheIndex >= index成立，并且logs[index].term
- == currentTerm，则更新commitIndex为index。
-\end_layout
-
-\begin_layout Subsection
-完善Server的（L, C, F）处理函数
-\end_layout
-
-\begin_layout Standard
-基于实验1，我们实现了Server的三种的状态转换及相应的处理函数，在实验2中，我们需要对其进行相应的完善：
-\end_layout
-
-\begin_layout Itemize
-Leader的处理函数中添加AppendEntries RPC处理函数和Log一致性处理函数；
-\end_layout
-
-\begin_layout Itemize
-Follower处理函数基本不变；
-\end_layout
-
-\begin_layout Itemize
-Candidate处理函数内部添加它成为Leader后的处理函数。
-\end_layout
-
-\begin_layout Standard
-具体细节见代码。
 \end_layout
 
 \begin_layout Section
 总体框架
-\end_layout
-
-\begin_layout Standard
-本次实验中，代码实现还是围绕着Server在三种状态转换以及它们的状态处理函数上进行。程序的主体是Server的状态转换函数，当一个Raft的Server被Ma
-ke函数创建之后，它就会启动状态转换函数，并监听当前自身所处的状态，来执行相应的状态处理函数。函数主题部分如图
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:2.1"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-placement H
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/state_code.png
-	height 7cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Raft Server的状态转换函数
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:2.1"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Chapter
