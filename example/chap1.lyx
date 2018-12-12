@@ -206,12 +206,12 @@ Command：标识一条Log实体中所包含的命令。
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/log.png
+	filename /Users/jim/Code/njuthesis/res/log.png
 	width 12cm
 
 \end_inset
@@ -360,7 +360,7 @@ Leader永远不会修改自己Log中的实体，只能对Log进行添加操作�
 \end_layout
 
 \begin_layout Itemize
-只有Leader中的Log实体能被提交，即使某条Log实体在其它Server中过半了，但只要Leader中没有就被能被提交；
+只有Leader中的Log实体能被提交，即使某条Log实体在其它Server中过半了，但只要Leader中没有就不能被提交；
 \end_layout
 
 \begin_layout Itemize
@@ -439,7 +439,7 @@ Raft服务器结构体
 \end_layout
 
 \begin_layout Standard
-基于实验1中对Raf结构体的定义，完善Raft结构体如表
+基于实验1中对Raft结构体的定义，完善Raft结构体如表
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:2.1"
@@ -2149,7 +2149,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/state_code.png
+	filename /Users/jim/Code/njuthesis/res/state_code.png
 	height 7cm
 
 \end_inset
@@ -2361,12 +2361,12 @@ go1.11.2 darwin/amd64
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/result.png
+	filename /Users/jim/Code/njuthesis/res/result.png
 	height 10cm
 
 \end_inset
