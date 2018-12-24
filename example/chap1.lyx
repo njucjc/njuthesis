@@ -208,7 +208,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/room.png
+	filename /Users/jim/Code/njuthesis/res/room.png
 	width 12cm
 
 \end_inset
@@ -419,7 +419,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/tree.png
+	filename /Users/jim/Code/njuthesis/res/tree.png
 	height 6cm
 
 \end_inset
@@ -462,7 +462,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/tree_eval.png
+	filename /Users/jim/Code/njuthesis/res/tree_eval.png
 	height 6cm
 
 \end_inset
@@ -573,7 +573,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/add.png
+	filename /Users/jim/Code/njuthesis/res/add.png
 	height 6cm
 
 \end_inset
@@ -616,7 +616,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/delete.png
+	filename /Users/jim/Code/njuthesis/res/delete.png
 	height 6cm
 
 \end_inset
@@ -676,7 +676,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/con-c.png
+	filename /Users/jim/Code/njuthesis/res/con-c.png
 	height 6cm
 
 \end_inset
@@ -742,7 +742,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/system.png
+	filename /Users/jim/Code/njuthesis/res/system.png
 	height 6cm
 
 \end_inset
@@ -849,7 +849,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/uml.png
+	filename /Users/jim/Code/njuthesis/res/uml.png
 	height 6cm
 
 \end_inset
@@ -901,8 +901,18 @@ Checker
 \end_layout
 
 \begin_layout Standard
-由于系统需要支持多种检测技术，虽然它们之间的内部算法各不相同，但是它们对外表现出来的功能是一致的，都是为了完成上下文一致性检测这一件 事情。因此，从它们对外的共
-性中能够抽象出一组对外的接口，然后根据它们内部算法的差异各自实现这组接口。
+如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:3.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示，由于系统需要支持多种检测技术，虽然它们之间的内部算法各不相同，但是它们对外表现出来的功能是一致的，都是为了完成上下文一致性检测这一件 事情。因此，从它们对
+外的共性中能够抽象出一组对外的接口，然后根据它们内部算法的差异各自实现这组接口。
 \end_layout
 
 \begin_layout Subsection
@@ -910,7 +920,18 @@ Scheduler
 \end_layout
 
 \begin_layout Standard
-系统检测的调度器接口，目前仅实现了Batch调度器，它的设计思路与Checker类似，它能够为不同的调度器提供统一的接口，降低系统耦合，有利于系统的再开发。
+如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:3.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示，Scheduler为系统检测的调度器接口，目前仅实现了Batch调度器，它的设计思路与Checker类似，它能够为不同的调度器提供统一的接口，降低系统耦合
+，有利于系统的再开发。
 \end_layout
 
 \begin_layout Chapter
@@ -1093,7 +1114,17 @@ Java(TM) SE Runtime Environment (build 9.0.1+11)
 
 \begin_layout Standard
 用于实验的数据集是 24 小时的出租车位置 (GPS) 信息数据，总共 1545116 条，其中每条数据表示单独一辆车，包含 ID，检测到的时间戳，位置，速度等
- 属性信息。用于实验的一致性约束共有11条。
+ 属性信息。用于实验的一致性约束共有21条
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+详见附录A
+\end_layout
+
+\end_inset
+
+。
 \end_layout
 
 \begin_layout Section
@@ -1101,7 +1132,7 @@ Java(TM) SE Runtime Environment (build 9.0.1+11)
 \end_layout
 
 \begin_layout Standard
-检测时间对比如图
+一次静态跑完24小时数据所用的检测时间对比如图
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:4.1"
@@ -1125,7 +1156,7 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Downloads/njuthesis/res/time.png
+	filename /Users/jim/Code/njuthesis/res/time.png
 	width 10cm
 
 \end_inset
@@ -1158,7 +1189,12 @@ name "fig:4.1"
 \end_layout
 
 \begin_layout Standard
-实验结果的趋势基本与论文中的一致，证明实现正确。
+从中我们可以看出 ECC 所需的检测时间最长， 性能最差;PCC 相较于 ECC 的提升最大，大约减少 80% 到 90% 的检测时 间，在几种检测技术中性能最
+优;Con-C 相较于 ECC 大约减少 40% 到 50% 的检测时间;实验结果的趋势基本与论文中的一致，证明实现正确。
+\end_layout
+
+\begin_layout Chapter
+总结展望
 \end_layout
 
 \begin_layout Section
@@ -1167,6 +1203,500 @@ name "fig:4.1"
 
 \begin_layout Standard
 本次实验复现了现有上下文一致性检测的检测技术，并将它们有机地整合到了同一个系统中，且可以通过配置文件配置检测技术的选择，总体上到达了实现的目标。
+\end_layout
+
+\begin_layout Standard
+主要有以下亮点：
+\end_layout
+
+\begin_layout Itemize
+在一个系统中有机地整合了多个工作的技术；
+\end_layout
+
+\begin_layout Itemize
+能够以配置文件的方式配置各个技术；
+\end_layout
+
+\begin_layout Itemize
+系统的可维护性高、耦合度低，有利于扩充系统添加新的技术。
+\end_layout
+
+\begin_layout Section
+展望
+\end_layout
+
+\begin_layout Standard
+本次实验虽然基本上复现了原有文献的工作，并将它们整合成了一个可用的系统，但是现有的检测技术还有可提升的空间。目前有如下几点展望：
+\end_layout
+
+\begin_layout Itemize
+CPU的并行性有限，我们能否使用CUDA来利用GPU强大的并行能力加速检测进程；
+\end_layout
+
+\begin_layout Itemize
+我们是否能够优化检测调度器，使得既能够减少检测调度的次数，又能保证不漏报错误信息，从减少检测次数下手来减少检测时间。
+\end_layout
+
+\begin_layout Chapter*
+附录A
+\end_layout
+
+\begin_layout Section*
+一致性约束描述
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="22" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+名称
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+描述
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule00
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+所有车辆经度在[112, 116]，纬度在[20, 24]
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule11
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule12
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule13
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+同一辆车，两次检测到的距离相差不能过远(不能相差过远这里按照
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule14
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+假设汽车最高速度不超过200km/h，地图上距离按照经纬度算位置距
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule15
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+离不超过0.025来判断)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule16
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule17
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule18
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rule19
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_dis_FC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+F地区和C地区不可能出现同一辆车
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_AC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+C地区包含A，故A地区的车辆一定也在C地区
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_BC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+C地区包含B，故B地区的车辆一定也在C地区
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_DF
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+F地区包含D，故D地区的车辆一定也在F地区
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_EF
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+F地区包含E，故E地区的车辆一定也在F地区
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_loc_close_DE
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+若一辆车从D移动到E，两次检测到的距离相差不能过远也不可能为0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_loc_close_CG
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+若一辆车从C移动到G，两次检测到的距离相差不能过远也不可能为0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_loc_close_GH
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+若一辆车从G移动到H，两次检测到的距离相差不能过远也不可能为0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cst_loc_close_GF
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+若一辆车从G移动到F，两次检测到的距离相差不能过远也不可能为0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Bibliography
