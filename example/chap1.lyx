@@ -78,7 +78,7 @@
 \begin_body
 
 \begin_layout Title
-Assignment 2: Raft Log Consensus
+上下文感知程序输入的一致性检测工具
 \end_layout
 
 \begin_layout Author
@@ -135,7 +135,7 @@ MF1833004
 \end_layout
 
 \begin_layout Date
-2018年12月07日
+2018年12月23日
 \end_layout
 
 \begin_layout Standard
@@ -158,24 +158,32 @@ filename "../build/frontmatter.lyx"
 \end_layout
 
 \begin_layout Chapter
-实验分析
+背景简介
 \end_layout
 
 \begin_layout Section
-实验目标
+上下文感知程序及其问题
 \end_layout
 
 \begin_layout Standard
-本此实验的目标是：在给定的实验1“Raft Leader Election”的基础上，继续实现Raft的Log Consensus部分，为了完成这个目标，还需要
-对实验1中的Leader Election的算法进行扩充，即完善投票机制，以选取最佳的Leader,详细过程在下文列出。
+上下文感知程序可以利用各种环境信息，如GPS数据、环境温度、氧气 浓度、房间信息等来帮助程序更好地提供服务，这部分程序作为程序的输入的的环境信息也被称为程序的上
+下文(下文统称这种输入信息为上下文)。上下文信息通常是通过程序关联的各类传感器进行感知，但是由于传感器感知过程容易受到噪声等不可控因素的影响，最终感知到的上下文
+信息很有可能并不准确，会影响程序的正常功能，甚至会造成一些不可预期的严重后果，因此，如何对于上下文信息的正确性进行一个预先的检测判断至关重要。
 \end_layout
 
 \begin_layout Section
-Raft中Log的结构
+一致性约束检测(constraint checking)
 \end_layout
 
 \begin_layout Standard
-如图
+由于直接判断上下文信息的正确性非常困难，常见的处理方式是对上下文信息进行约束检测，即通过利用事先定义的一系列不可被违反的一致性约束 (consistency
+ constraint)来帮助检测上下文信息的一致性，若一旦发现存在任何违 反情况，则认为此时的上下文信息中存在不一致(inconsistency)，需要进行后
+续 上下文修复后再传入程序或直接丢弃。
+\end_layout
+
+\begin_layout Standard
+例如:“一个人不可能同时出现在两个房间”是一个简单的约束且用不可 能被违反，则一旦报告检测到某人同时出现在两个房间，则认为此时上下文信 息中存在不一致，不可直接
+传入应用程序。例如图
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:1.1"
@@ -185,19 +193,8 @@ noprefix "false"
 
 \end_inset
 
-所示，一个Log的实体由一个三元组(Index, Term, Command)组成：
-\end_layout
-
-\begin_layout Itemize
-Index：标识一个Log实体在所有Log中的相对位置（下标）；
-\end_layout
-
-\begin_layout Itemize
-Term：标识一个Log实体产生时的Leader任期，由于Term值是全局单向递增的，故在一个Log内它的值也是单向递增的；
-\end_layout
-
-\begin_layout Itemize
-Command：标识一条Log实体中所包含的命令。
+中，程序感兴趣的上下文 信息为room X和Y中的人物情况，则一系列John和Sam的动作会使得上下文信息 发生改变，“John enters
+ room Y”动作发生后会使得John同时出现在room X和 room Y，存在违反约束的情况“一个人不可能同时出现在两个房间”，检测到上下文中存在不一致。
 \end_layout
 
 \begin_layout Standard
@@ -206,12 +203,12 @@ Command：标识一条Log实体中所包含的命令。
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/log.png
+	filename /Users/jim/Downloads/njuthesis/res/room.png
 	width 12cm
 
 \end_inset
@@ -223,7 +220,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Log示意图
+一个例子
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:1.1"
@@ -243,1889 +240,110 @@ name "fig:1.1"
 
 \end_layout
 
-\begin_layout Standard
-其中一个(Index, Term)对就唯一确定了一个Log实体，Log必须被持久可靠地保存在磁盘中。
-\end_layout
-
 \begin_layout Section
-Normal Operation
-\begin_inset CommandInset citation
-LatexCommand cite
-key "key-1"
-literal "false"
+问题的形式化描述
+\end_layout
 
+\begin_layout Standard
+为了便于之后的描述和讨论，接下来我们将形式化地描述环境上下文一致性约束检测这个问题，主要包含以下三个方面：
+\end_layout
+
+\begin_layout Itemize
+用集合描述上下文信息，如用集合
+\begin_inset Formula $C_{x}$
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-在集群正常运转（有且仅有一个Leader）的时候的操作过程（Normal Operation）如下：
+表示房间X 中有哪些人;
 \end_layout
 
 \begin_layout Itemize
-Client向Leader发送Command请求
-\end_layout
-
-\begin_layout Itemize
-Leader将来自Client的Command请求存入自己的本地日志中（包含当前Term信息）；
-\end_layout
-
-\begin_layout Itemize
-Leader向所有Follower并发广播AppendEntries的RPC请求，等待Follower的响应；
-\end_layout
-
-\begin_layout Itemize
-一旦Leader收到大于半数的响应回复，则Leader认为这条Log实体已经被Commit了，所以开始执行这条Command命令，且通知所有Follower这条
-Log实体已被提交；
-\end_layout
-
-\begin_layout Itemize
-将执行结果返回给Client。
-\end_layout
-
-\begin_layout Subsection
-Log的一致性
-\end_layout
-
-\begin_layout Standard
-Raft将会尽可能地保证在同一集群的不同Server间的Log保持相对一致的状态，在最好的情况下，所有的机器上的Log都是相同的，但是，这在现实场景下往往是做不
-到的，所以Raft保证的Log一致性如下：
-\end_layout
-
-\begin_layout Itemize
-(Index, Term)对唯一标识一个Log实体；
-\end_layout
-
-\begin_layout Itemize
-若个Log实体已被Commit，则在这个Log实体之前的所有实体也一定被Commit了。
-\end_layout
-
-\begin_layout Subsection
-AppendEntries的一致性检查
-\end_layout
-
-\begin_layout Standard
-为了保证上一小节说到的Log的一致性，需要添加以下约束条件来对AppendEntries做一致性检查：
-\end_layout
-
-\begin_layout Itemize
-当Leader向Follower发出AppendEntries的请求时，除了要包含新的Log实体外还需要包含上一个Log实体Term值和Index值
-\end_layout
-
-\begin_layout Itemize
-当Follower接收到了来自Leader的请求时，需要判断当前的Log中的最后一个实体的Term和Index能否与请求中的上一个Log实体Term值和Inde
-x值匹配，匹配则接受，不匹配就拒绝。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Separator plain
+用一阶逻辑语言描述一致性约束，如“一个人不会同时出现在两个房间” 这条一致性约束可以描述为：
+\begin_inset Formula $\forall v_{1}\in C_{x}(not(\exists v_{2}\in C_{y}(same(v_{1},v_{2}))))$
 \end_inset
 
-
+;
 \end_layout
 
-\begin_layout Standard
-从这个流程来看，我们可以看出这是一个归纳的过程，即要求接受一个新的Log实体前必须要求前一个实体与之匹配，从而保证了Log的一致性。
+\begin_layout Itemize
+上下文信息的改变，主要分为两种:
 \end_layout
 
-\begin_layout Section
-Leader变更后的Log一致性保证
-\begin_inset CommandInset citation
-LatexCommand cite
-key "key-1"
-literal "false"
-
+\begin_deeper
+\begin_layout Itemize
+增加:如“Sanji enters room X”，可以表示为在集合 
+\begin_inset Formula $C_{x}$
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-旧的Leader挂掉新的Leader上任后，面临的一个问题是，各个Server的Log状态很可能是不一致的，因为旧Leader可能只完成了部分Server的Lo
-g复制就挂掉了，而Raft采取的方式是以Leader的Log为准进行Log的Clean up，最终使得所有Follower的日志与新Leader完全相同。
-\end_layout
-
-\begin_layout Subsection
-安全性原则
-\end_layout
-
-\begin_layout Standard
-任何实现了Replicated Logs的系统都必须遵循的基本安全性原则是：所有的Server都必须以相同的顺序执行完全相同的Command，而Raft能保证的
-安全性原则如下：
+上增加了一个元素 Sanji;
 \end_layout
 
 \begin_layout Itemize
-Leader永远不会修改自己Log中的实体，只能对Log进行添加操作；
-\end_layout
-
-\begin_layout Itemize
-只有Leader中的Log实体能被提交，即使某条Log实体在其它Server中过半了，但只要Leader中没有就不能被提交；
-\end_layout
-
-\begin_layout Itemize
-Log实体中的命名在被Server执行之前，这个Log实体必须处于已提交状态。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Separator plain
+减少:如“Sanji leaves room X”，可以表示为在集合
+\begin_inset Formula $C_{x}$
 \end_inset
 
+上删除了一个元素 Sanji。
+\end_layout
+
+\end_deeper
+\begin_layout Standard
 
 \end_layout
 
 \begin_layout Standard
-但仅仅保证上述三条原则并不能保证基本的安全性原则，所以必须增加约束条件如下：
-\end_layout
-
-\begin_layout Itemize
-对Leader选举增加约束条件：如果一个Candidate的Log中缺少已经提交的Log实体，则不给这个Candidate投票；
-\end_layout
-
-\begin_layout Itemize
-改变Commited的定义：前文提到Log实体过半存在即可提交，但这是不够的，在某些情况下，即使过半也需要延迟提交，以保证后续的Leader中有这条Log实体。
-\end_layout
-
-\begin_layout Subsection
-选择最佳的Leader
-\end_layout
-
-\begin_layout Standard
-即选择Log信息最为“完备”的Candidate作为新Leader，Raft的思路是：
-\end_layout
-
-\begin_layout Itemize
-优先选择Term大的Candidate；
-\end_layout
-
-\begin_layout Itemize
-Term相同则比较Log的长度，Log越长越具有权威性。
-\end_layout
-
-\begin_layout Subsection
-修复Follower的Log
-\end_layout
-
-\begin_layout Standard
-前面我们提到，新的Leader的一项重要任务就是修复Follower的Log，使得最终所有的Follower中的Log都与Leader保持一致，具体的过程如下：
-\end_layout
-
-\begin_layout Itemize
-删除Follower中的多余Log实体；
-\end_layout
-
-\begin_layout Itemize
-用自己的Log实体填充Follower中缺失的Log实体。
+这样描述的好处是，能够将现实生活中复杂多样的环境上下文信息的改变化为集合上的元素增删操作，将上下文的一致性约束检测转化为对一阶逻辑表达式的真值求解，即当某个描述
+一致性约束的一阶逻辑公式的返回值为false时我们就说检测到了一致性错误。
 \end_layout
 
 \begin_layout Chapter
-设计与实现
+现有工作
 \end_layout
 
 \begin_layout Section
-数据结构
+核心思想
+\end_layout
+
+\begin_layout Subsection
+一致性约束检测的基本步骤
+\end_layout
+
+\begin_layout Standard
+一致性约束检测需要回答两个基本问题:一是当前的上下文信息是否违反 了一致性规则?二是上下文信息不一致是由什么造成的?这两个问题分别由真值求解(truth
+ value evaluation)和违反链生成(link generation)这两个步骤来解决。
+\end_layout
+
+\begin_layout Standard
+真值求解，即对描述一致性约束的一阶逻辑公式在特定的上下文信息下进 行求值，若公式返回值为 true，则说明这条一致性约束没有被违反;反之，则说明当前有某些上下文
+信息存在违反一致性约束的情况。
+\end_layout
+
+\begin_layout Standard
+违反链生成可以看作是对真值求解的扩充，通过真值求解我们只能够知道 在当前的上下文信息下一致性约束是否被违反，却无法知道这个违反是如何产生的，违反链生成的过程在于
+收集导致一致性约束被违反的特定上下文(使得一阶逻辑公式为false的上下文信息)，以便于将它们反馈给应用程序，用于指导上下文不一致的修复。
+\end_layout
+
+\begin_layout Standard
+接下来，我们来介绍一些现有工作的具体做法。
+\end_layout
+
+\begin_layout Section
+完全检测
+\end_layout
+
+\begin_layout Standard
+完全检测(ECC)
 \begin_inset CommandInset citation
 LatexCommand cite
-key "key-4,key-5,key-6"
+key "ECC"
 literal "false"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Subsection
-Raft服务器结构体
-\end_layout
-
-\begin_layout Standard
-基于实验1中对Raft结构体的定义，完善Raft结构体如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.1"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示，其中后5个是实验2中新增的字段。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Raft结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.1"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="16" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-mu
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-sync.Mutex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-互斥量，用于同步
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-peers
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-[]*labrpc.ClientEnd
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-集群的中Servers
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-me
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-当前peer在peers数组中的下标
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-state
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ServerState
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-当前peer的状态
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-currentTerm
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Server当前所在的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-votedFor
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-为候选人投票
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-candidateToFollower
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-chan int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-通知Candidate变回Follower的channel
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-leaderToFollower
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-chan int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-通知Leader变回Follower的channel
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-heartbeat
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-chan int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-发送heartbeat的channel
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-electionTimer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-*time.Timer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-选举超时计时器
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-commitIndex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-最大的已经被commit的日志的index
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-lastApplied
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-最大的已经被应用到状态机的index
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-nextIndex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-[]int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-每个节点下一次应该接收的日志的index
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-matchIndex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-[]int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-每个节点已经复制的日志的最大的索引
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-logs
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-[]LogEntry
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-日志实体集
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-RequestVoteArgs结构体
-\end_layout
-
-\begin_layout Standard
-基于实验1中对RequestVoteArgs，完善其结构体如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.2"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示，其中后2个是实验2中新增的字段。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-RequestVoteArgs结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.2"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="5" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Candidate所在的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-CandidateId
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Candidate的ID
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-LastLogIndex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Candidate最后一条日志的索引
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-LastLogTerm 
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Candidate最后一条日志的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-RequestVoteReply结构体
-\end_layout
-
-\begin_layout Standard
-RequestVoteReply的字段与实验1一致，其结构体如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.3"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-RequestVoteReply结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.3"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-当前任期，用于Candidate更新自己的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-VoteGranted
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-bool
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-表示是否为Candidate投票
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-AppendEntryArgs结构体
-\end_layout
-
-\begin_layout Standard
-基于实验1中对AppendEntryArgs，完善其结构体如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.4"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示，其中后4个是实验2中新增的字段。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-AppendEntryArgs结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.4"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Leader的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-LeaderId
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Leader节点的ID
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-PervLogIndex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-此次添加请求的上一个日志Index
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-PrevLogTerm
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-此次添加加请求的上一个日志Term
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Entries
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-[]LogEntry
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-要添加的日志
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-LeaderCommit
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-在Leader中已经Commit的Index
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-AppendEntryReply结构体
-\end_layout
-
-\begin_layout Standard
-新增AppendEntryReply结构体，其字段如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.5"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-AppendEntryReply结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.5"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-当前的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Success
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-bool
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-上一个日志是否匹配
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-NextIndex
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-下一个Index
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-LogEntry结构体
-\end_layout
-
-\begin_layout Standard
-新增LogEntry结构体，其字段如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:2.6"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示。
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-LogEntry结构体字段
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:2.6"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-字段名称
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-类型
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-描述
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Index
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-int
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-下标索引
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Term
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-bool
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Log实体产生时的任期
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Command
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-interface{}
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-命令
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-相关处理函数的实现与完善
-\end_layout
-
-\begin_layout Subsection
-实现Start函数
-\end_layout
-
-\begin_layout Standard
-用于Leader将一条命令记录到自己的Log中，实现逻辑如下：
+是最早出现的关于一致性约束检测的技术，它的算法十 分朴素，主要分为以下三个步骤:
 \end_layout
 
 \begin_layout Itemize
-若该Server不是Leader，则返回(index, term, false)；
-\end_layout
-
-\begin_layout Itemize
-若该Server为Leader，用该条命令实例化一个Log实体，并添加到自己的本地Log中，返回(index, term, true)。
-\end_layout
-
-\begin_layout Standard
-细节见raft.go中的Start()函数实现。
-\end_layout
-
-\begin_layout Subsection
-完善RequestVote函数
-\end_layout
-
-\begin_layout Standard
-在实验1的基础上，新增对Log权威性的判断
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Term的判断已经在实验1中实现。
-\end_layout
-
-\end_inset
-
-：
-\end_layout
-
-\begin_layout Itemize
-Candidate的日志等于或多余接收者的日志，则接收者投票给Candidate，否则拒绝投票。
-\end_layout
-
-\begin_layout Subsection
-完善AppendEntries RPC处理函数
-\end_layout
-
-\begin_layout Standard
-实现逻辑如下：
-\end_layout
-
-\begin_layout Itemize
-收到的Term比当前Term小，拒绝请求，返回false；
-\end_layout
-
-\begin_layout Itemize
-上一条Log实体相应的Term和Index与目标不匹配，拒绝请求，返回false；
-\end_layout
-
-\begin_layout Itemize
-存在Index相同但Term不同的Log实体，则删除该位置开始的所有Log实体；
-\end_layout
-
-\begin_layout Itemize
-添加不存在的Log实体；
-\end_layout
-
-\begin_layout Itemize
-如果LeaderCommit > CommitIndex，则将CommitIndex设置为LeaderCommit和上一个Log实体Index中较小的一个。
-\end_layout
-
-\begin_layout Standard
-具体细节见代码。
-\end_layout
-
-\begin_layout Subsection
-实现persist和readPersist函数
-\end_layout
-
-\begin_layout Standard
-Persist函数的实现逻辑是将Raft的currentTerm、votedFor以及logs字段保存起来；readPersiste是读取保存信息的过程。具体实
-现参见代码的相关函数。
-\end_layout
-
-\begin_layout Standard
-另外，需要在实验1的代码的合适位置添加persist函数调用，以保存信息，避免信息因Serser宕机而丢失，具体位置见代码。
-\end_layout
-
-\begin_layout Subsection
-添加Log的一致性处理函数
-\end_layout
-
-\begin_layout Standard
-当一个Candidate成为一个Leader的时候，需要对集群中的Log进行一致性恢复处理，即对每一个Follower，执行如下逻辑：
-\end_layout
-
-\begin_layout Itemize
-若Follower的最后一个Log实体的Index >= nextIndex，则发送从NextIndex开始的所有日志条目给Folower；
-\end_layout
-
-\begin_layout Itemize
-若更新Log成功，则更新相应的Follower的nextIndex和matchIndex；
-\end_layout
-
-\begin_layout Itemize
-若因Log不一致而失败，则减少nextIndex发起重试
-\end_layout
-
-\begin_layout Itemize
-如果存在一个index满足index > commitIndex，并且大多数的matcheIndex >= index成立，并且logs[index].term
- == currentTerm，则更新commitIndex为index。
-\end_layout
-
-\begin_layout Subsection
-完善Server的（L, C, F）处理函数
-\end_layout
-
-\begin_layout Standard
-基于实验1，我们实现了Server的三种的状态转换及相应的处理函数，在实验2中，我们需要对其进行相应的完善：
-\end_layout
-
-\begin_layout Itemize
-Leader的处理函数中添加AppendEntries RPC处理函数和Log一致性处理函数；
-\end_layout
-
-\begin_layout Itemize
-Follower处理函数基本不变；
-\end_layout
-
-\begin_layout Itemize
-Candidate处理函数内部添加它成为Leader后的处理函数。
-\end_layout
-
-\begin_layout Standard
-具体细节见代码。
-\end_layout
-
-\begin_layout Section
-总体框架
-\end_layout
-
-\begin_layout Standard
-本次实验中，代码实现还是围绕着Server在三种状态转换以及它们的状态处理函数上进行。程序的主体是Server的状态转换函数，当一个Raft的Server被Ma
-ke函数创建之后，它就会启动状态转换函数，并监听当前自身所处的状态，来执行相应的状态处理函数。函数主题部分如图
+根据当前上下文信息为一致性约束的语法树构建一棵运行时树，构造方式如图
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:2.1"
@@ -2135,7 +353,59 @@ noprefix "false"
 
 \end_inset
 
-所示：
+中所示；
+\end_layout
+
+\begin_layout Itemize
+对构建的运行时树进行一次完整的后序遍历求真值(真值求解)，如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示；
+\end_layout
+
+\begin_layout Itemize
+最后再对运行时树进行一次完整的后序遍历生成违反链(违反链生成)，如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+对于 ECC，运行时树的生成和遍历都需要对整棵运行时树进行，所以当需要处理的数据量很大的时候它的效率及其低下，为了提升检测的速度，人们基于ECC提出很多改善方案
+，就如我们接下来要讲的增量检测(PCC)
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PCC"
+literal "false"
+
+\end_inset
+
+。 
 \end_layout
 
 \begin_layout Standard
@@ -2144,13 +414,13 @@ noprefix "false"
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/state_code.png
-	height 7cm
+	filename /Users/jim/Downloads/njuthesis/res/tree.png
+	height 6cm
 
 \end_inset
 
@@ -2161,7 +431,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Raft Server的状态转换函数
+一致性约束的(a)语法树和(b)运行时树
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:2.1"
@@ -2181,8 +451,478 @@ name "fig:2.1"
 
 \end_layout
 
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/tree_eval.png
+	height 6cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+基于运行时树的真值求解和违反链生成
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.2"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\noindent
+增量检测
+\end_layout
+
+\begin_layout Standard
+不同于完全检测，在增量检测(PCC)中，对于运行时树的构造和遍历都 只需要涉及运行时树发生改变的一部分，未发生改变的部分则复用以前的计算结果，它的算法概述如下:
+\end_layout
+
+\begin_layout Itemize
+根据上下文信息的改变局部调整运行时树;
+\end_layout
+
+\begin_layout Itemize
+局部增量计算真值;
+\end_layout
+
+\begin_layout Itemize
+局部增量生成违反链。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+具体来说，在PCC运行过程中动态地给运行时树的节点标注状态信息，如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.3"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+和图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:2.4"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示，总共包含三种状态：
+\end_layout
+
+\begin_layout Itemize
+NC:表示该节点的真值或违反链无需重新计算，可复用历史结果;
+\end_layout
+
+\begin_layout Itemize
+FC:表示该节点的真值和违反链需要重新计算;
+\end_layout
+
+\begin_layout Itemize
+IC:表示该节点的真值和违反链可以增量计算，即可以部分利用子节点的历史信息重新生成。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/add.png
+	height 6cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+两个新增分支被加入运行时树(虚线分支为新增分支
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.3"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/delete.png
+	height 6cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+将一个分支从运行时树中删除(虚线分支为被删除分支)
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.4"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+基于CPU的并行检测
+\end_layout
+
+\begin_layout Standard
+在前面的两个小节中讨论的检测技术(ECC、PCC)都是串行的检测技术，而现代的处理器往往拥有多个核心，并支持多线程编程。因此，单纯的串行检测技术无法充分利用现代
+处理器的计算能力。为了充分利用现代处理器的计算能力，Con-C
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Con-C"
+literal "false"
+
+\end_inset
+
+ 技术考虑将一个完整的一致性约束检测任务分配成多个工作量平衡的子任务，并将它们交付给不同的线程来完成，最后汇总各个线程的中间计算结果得到最终结果，如图所示。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/con-c.png
+	height 6cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Con-C 的工作示意图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.5"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
-结果演示与总结
+系统设计实现
+\end_layout
+
+\begin_layout Section
+总体框架
+\end_layout
+
+\begin_layout Standard
+本次的系统实现是对上述已有工作的复现和整合，能够在给定一致性约束的情况下，对于输入context change信息，可以配置不同的检测技术，静态进行一
+ 致性检测，并报告出检测出的不一致信息和合适的辅助log信息，总体框架图如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:3.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/system.png
+	height 6cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+系统总体框架
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:3.1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+包含的输入为：
+\end_layout
+
+\begin_layout Itemize
+约束文件:由一阶逻辑语言翻译得到，并用XML描述;
+\end_layout
+
+\begin_layout Itemize
+配置文件:用于指定一次一致性约束检测所采用的检测技术(ECC/PCC/Con-C);
+\end_layout
+
+\begin_layout Itemize
+数据文件:固定格式的上下文信息流序列文件
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+包含的输出为：
+\end_layout
+
+\begin_layout Itemize
+不一致报告:记录检测到的一致性错误信息; 
+\end_layout
+
+\begin_layout Itemize
+辅助记录:记录一些辅助信息，如检测的时间、一致性错误的总数等。
+\end_layout
+
+\begin_layout Section
+具体实现
+\end_layout
+
+\begin_layout Standard
+本次系统采用Java实现
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+代码及相应数据集见：https://github.com/njucjc/small-tool
+\end_layout
+
+\end_inset
+
+，系统的UML图如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:3.2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/uml.png
+	height 6cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+系统实现大致UML图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:3.2"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+ConfigParse
+\end_layout
+
+\begin_layout Standard
+顾名思义，ConfigParser作用就是分析用户给定的配置文件，并根据配置文 件实例化用户指定的Checker和Scheduler，然后启动上下文一致性检测过
+程。
+\end_layout
+
+\begin_layout Standard
+通过getChecker和 getScheduler 在运行时根据配置文件的指示分别获取 Checker 和 Scheduler 的实 例对象，这样设计的好处是
+能够解耦一个复杂系统。在我们的系统中要支持多种检测技术，如果将它们的实现都杂糅在一起， 将会大大增加系统的复杂程度，使得系统变得难以维护和拓展，而上图的设计能够
+很好地解决系统维护和拓展的问题，当我们需要添加一种检测技术时，只需要根据Checker接口要求实现具体的算法即可。
+\end_layout
+
+\begin_layout Subsection
+Checker
+\end_layout
+
+\begin_layout Standard
+由于系统需要支持多种检测技术，虽然它们之间的内部算法各不相同，但是它们对外表现出来的功能是一致的，都是为了完成上下文一致性检测这一件 事情。因此，从它们对外的共
+性中能够抽象出一组对外的接口，然后根据它们内部算法的差异各自实现这组接口。
+\end_layout
+
+\begin_layout Subsection
+Scheduler
+\end_layout
+
+\begin_layout Standard
+系统检测的调度器接口，目前仅实现了Batch调度器，它的设计思路与Checker类似，它能够为不同的调度器提供统一的接口，降低系统耦合，有利于系统的再开发。
+\end_layout
+
+\begin_layout Chapter
+实验分析与总结
+\end_layout
+
+\begin_layout Section
+实验设计
+\end_layout
+
+\begin_layout Standard
+为了验证对已有工作复现的正确性，我设计了一组对比实验，探究在不同检测技术下，对比处理同一上下文信息的检测时间，并与论文中的结果比较，以证明实现的正确性。
 \end_layout
 
 \begin_layout Section
@@ -2273,7 +1013,7 @@ CPU型号
 \begin_inset Text
 
 \begin_layout Plain Layout
-Intel Core i7-7700@3.60GHz
+i3-2310M@2.10GHz，x86-64
 \end_layout
 
 \end_inset
@@ -2293,7 +1033,7 @@ Intel Core i7-7700@3.60GHz
 \begin_inset Text
 
 \begin_layout Plain Layout
-32GB
+8GB
 \end_layout
 
 \end_inset
@@ -2313,7 +1053,7 @@ Intel Core i7-7700@3.60GHz
 \begin_inset Text
 
 \begin_layout Plain Layout
-macOS Mojave 10.14.1
+Ubuntu 16.04
 \end_layout
 
 \end_inset
@@ -2324,7 +1064,7 @@ macOS Mojave 10.14.1
 \begin_inset Text
 
 \begin_layout Plain Layout
-Go版本
+JRE版本
 \end_layout
 
 \end_inset
@@ -2333,7 +1073,7 @@ Go版本
 \begin_inset Text
 
 \begin_layout Plain Layout
-go1.11.2 darwin/amd64
+Java(TM) SE Runtime Environment (build 9.0.1+11)
 \end_layout
 
 \end_inset
@@ -2351,8 +1091,27 @@ go1.11.2 darwin/amd64
 
 \end_layout
 
+\begin_layout Standard
+用于实验的数据集是 24 小时的出租车位置 (GPS) 信息数据，总共 1545116 条，其中每条数据表示单独一辆车，包含 ID，检测到的时间戳，位置，速度等
+ 属性信息。用于实验的一致性约束共有11条。
+\end_layout
+
 \begin_layout Section
 结果展示
+\end_layout
+
+\begin_layout Standard
+检测时间对比如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:4.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
 \end_layout
 
 \begin_layout Standard
@@ -2361,13 +1120,13 @@ go1.11.2 darwin/amd64
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/result.png
-	height 10cm
+	filename /Users/jim/Downloads/njuthesis/res/time.png
+	width 10cm
 
 \end_inset
 
@@ -2378,10 +1137,10 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-运行结果展示
+时间对比
 \begin_inset CommandInset label
 LatexCommand label
-name "fig:3.1"
+name "fig:4.1"
 
 \end_inset
 
@@ -2396,6 +1155,10 @@ name "fig:3.1"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+实验结果的趋势基本与论文中的一致，证明实现正确。
 \end_layout
 
 \begin_layout Section
@@ -2403,86 +1166,60 @@ name "fig:3.1"
 \end_layout
 
 \begin_layout Standard
-本次实验主要是在实验1:“Leader Election”的基础上进一步实现分布式一致性算法Raft的“Log Consensus”部分，经过实验1的训练，在本
-次实验中对Go语言的运用已经不像刚开始那样生疏。在本次实验中遇到的困难主要是来源于对Raft中Log的一致性算法的理解，因为它从直觉上来看是十分自然的，但在具体
-实现上有存在许多细节，如果一不小心错过这些一些细节，就会导致实现上的错误。
+本次实验复现了现有上下文一致性检测的检测技术，并将它们有机地整合到了同一个系统中，且可以通过配置文件配置检测技术的选择，总体上到达了实现的目标。
 \end_layout
 
-\begin_layout Standard
-对算法的理解我主要参看了文献
-\begin_inset CommandInset citation
-LatexCommand cite
-key "key-1,key-2,key-3"
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "ECC"
 literal "false"
 
 \end_inset
 
-，实现上遇到的错误，如某些测试用例不通过的问题，都是在Google或StackOverflow上寻找解决方案，总而言之，本次实验让我收获很多，Debug难是本次
-实验的最大障碍之一。
+C.
+ Nentwich, L.
+ Capra, W.
+ Emmerich, and A.
+ Finkelsteiin, “xlinkit: A consis- tency checking and smart link generation
+ service,”ACM Transaction on Internet Technology (TOIT), vol.
+ 2, no.
+ 2, pp.
+ 151–185, 2002.
 \end_layout
 
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "key-1"
+key "PCC"
+literal "false"
 
 \end_inset
 
-https://www.jianshu.com/p/10bdc956a305
+C.
+ Xu, S.
+ C.
+ Cheung, and W.
+ K.
+ Chan, “Incremental consistency checking for pervasive context,”in Proceedings
+ of the 28th international conference on Soft- ware engineering (ICSE).
+ ACM, 2006, pp.
+ 292–301.
 \end_layout
 
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "key-2"
+key "Con-C"
+literal "false"
 
 \end_inset
 
-http://www.cnblogs.com/hzmark/p/raft.html
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "key-4"
-
-\end_inset
-
-https://github.com/sunhay/mit-6.824-2017
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "key-5"
-
-\end_inset
-
-https://github.com/bin2415
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "key-6"
-
-\end_inset
-
-https://github.com/bysui/mit6.824
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "key-3"
-
-\end_inset
-
-Ongaro, Diego, and John K.
- Ousterhout.
- "In search of an understandable consensus algorithm." USENIX Annual Technical
- Conference.
- 2014.
+C.Xu,Y.Liu,S.C.Cheung,C.Cao,andJ.Lv,“Towardscontextconsistencyby concurrent checking
+ for internetware applications,”Science China Information Sciences, vol.
+ 56, no.
+ 8, pp.
+ 1–20, 2013.
 \end_layout
 
 \end_body
