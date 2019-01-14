@@ -78,7 +78,7 @@
 \begin_body
 
 \begin_layout Title
-Assignment 2: 中文命名实体识别 
+Assignment 3: 自然语言通顺与否的判定 
 \end_layout
 
 \begin_layout Author
@@ -91,7 +91,7 @@ Assignment 2: 中文命名实体识别
 \end_layout
 
 \begin_layout Date
-2018年11月27日
+2019年1月14日
 \end_layout
 
 \begin_layout Standard
@@ -104,7 +104,7 @@ LatexCommand tableofcontents
 \end_layout
 
 \begin_layout Chapter
-实验总览
+问题分析
 \end_layout
 
 \begin_layout Section
@@ -112,25 +112,44 @@ LatexCommand tableofcontents
 \end_layout
 
 \begin_layout Standard
-本次实验的任务是：用自然语言处理及机器学习的方式从分好词的测试集中识别出其中包含的命名实体（Named Entity）。具体来说，本次实验要求识别出人名（PER
-SON）、地点（LOCATION）、时间（TIME）及机构名（ORGANIZATION）等命名实体。
+本次实验的任务为然语言通顺与否的判定，具体来说就是给定一个句子，要求判定所给的句子是否通顺，若句子通顺输出0，反之输出1。
 \end_layout
 
 \begin_layout Section
-背景简介
+语言模型
 \end_layout
 
 \begin_layout Standard
-命名实体识别（Named Entity Recognition, NER）是自然语言处理中的一项基础任务，狭义上，就是指从一段文本中识别出人名、地名组织机构名等
-专有名词，在特定领域中它可能有不同的指代
+对于很多自然语言处理领域的问题，比如机器翻译，处理要确定预测结果中的字词集合以外，还有一个非常重要的方面就是要评估文本序列是否符合人类使用的习惯。也就是要判断文
+本是否通顺、自然、甚至在翻译问题上，“信”、“达”、“雅”是一种高级的要求。语言模型就是用于评估文本符合语言使用习惯程度的模型
 \begin_inset CommandInset citation
 LatexCommand cite
-key "NER-blog"
+key "LM-blog"
 literal "false"
 
 \end_inset
 
 。
+\end_layout
+
+\begin_layout Standard
+要让机器来评估文本是否符合人类的使用习惯，一种方式是通过语言学方面的研究，制定出人类语言的范式，比如：陈述句是由主谓宾构成的、定语修饰语需要加在名词前面等等。然
+而，所有人类语言的共同特点就是字词组合具有非常大的灵活性，同一语义可以有多种表达方式，这给规则的制定带来了巨大的难题，因此我们不使用规则模型来完成我们的工作。
+\end_layout
+
+\begin_layout Standard
+近年来，神经语言模型的发展为自然语言处理的文本分类等多个领域作出了巨大贡献，因此，我们可以考虑将本次实验的任务转化为在神经语言模型下的文本二分类问题，即利用句子
+通顺为一类，不通顺为另一类来训练分类器，如图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:1.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示。
 \end_layout
 
 \begin_layout Standard
@@ -144,8 +163,8 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/pic1-1.png
-	height 1cm
+	filename /Users/jim/Downloads/njuthesis/res/基础模型.PNG
+	height 6cm
 
 \end_inset
 
@@ -156,7 +175,7 @@ status collapsed
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-一个例子
+基础模型框架
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:1.1"
@@ -176,78 +195,48 @@ name "fig:1.1"
 
 \end_layout
 
-\begin_layout Standard
-如图
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:1.1"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示，我们可以从图中的句子里提取出“李华/PER”、“共青团/ORG”、“上海/LOC”这几个命名实体。
-\end_layout
-
-\begin_layout Standard
-汉语的命名实体识别相较于英语等其它语言来说，往往更具有挑战性，原因有以下几点：
-\end_layout
-
-\begin_layout Itemize
-在中文文本中不存在词与词之间的显式分割符，对于汉语来说，词与词之间的界限难以界定。不过这一点在本次实验不复存在，因为给定的文本已经是分好词的。
-\end_layout
-
-\begin_layout Itemize
-汉语言博大精深，在中文文本中同一个词在不同语境中所表达的含义可能不同；更有广泛存在的汉语简化表达，如“南大”等。
-\end_layout
-
-\begin_layout Itemize
-命名实体可能出现嵌套，例如“南京大学附属中学”这一机构名可能会被误报为“南京大学”这一机构名。
-\end_layout
-
 \begin_layout Chapter
-设计与实现
+技术方案
 \end_layout
 
 \begin_layout Standard
-本次实验采用了带有条件随机场（CRF）层的双向长短期记忆神经网络（BiLSTM）
-\begin_inset CommandInset citation
-LatexCommand cite
-key "seq-tag"
-literal "false"
-
-\end_inset
-
-模型，代码实现主要是基于Tensorflow
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tensorflow"
-literal "false"
-
-\end_inset
-
-这一深度学习框架，并利用对已有的开源实现
-\begin_inset CommandInset citation
-LatexCommand cite
-key "chinesener"
-literal "false"
-
-\end_inset
-
-进行扩充，以满足本次实验的要求。
+在上一章我们讲到可以将本次工作转换为一个基于神经语言模型的句子分类问题，既然有了目标，那么现在的任务有两个：一是，特征提取及表示，由于我们使用的是中文，所以有基
+于“字”的向量和基于“词”的向量可供选择；二是，神经语言模型的选择，目前用于文本分类的模型大致有CNN、RNN、(Bi)LSTM，还有最近很火热的Google团
+队提出的BERT模型。
 \end_layout
 
 \begin_layout Standard
-在本章节的剩余部分，我将阐述训练模型的具体流程，以及为何要使用BiLSTM-CRF模型来完成本次实验。
+由于时间关系，在本次实验中，我仅选择了BiLSTM + Attention机制的模型和BERT模型分别进行了训练，并从中选择结果较优的一个作为最终结果。在具体讲
+这两个模型之前，我先简单介绍一下特征提取和Word Embedding的相关内容。
 \end_layout
 
 \begin_layout Section
+特征工程
+\end_layout
+
+\begin_layout Subsection
+特征提取
+\end_layout
+
+\begin_layout Standard
+由于本次实验给出的训练集存在较多的噪声，如句子中存在一些特殊字符和敏感词汇等等，我们首先需要做的就是将这些特殊词汇去除，然后再对句子进行基于字或词的拆分即可，其
+中基于中文词的分词可采用jieba分词包
+\begin_inset CommandInset citation
+LatexCommand cite
+key "jieba"
+literal "false"
+
+\end_inset
+
+完成。
+\end_layout
+
+\begin_layout Subsection
 Word Embedding
 \end_layout
 
 \begin_layout Standard
-使用模型处理文本的第一步就是将文本转换成数学表述（向量），其中最简单的做法就是将词典中的每一个词都用一个one-hot向量来表示，如图
+特征提取完成后的下一步就是将句子转换成向量表示，其中最简单的做法就是将词典中的每一个词都用一个one-hot向量来表示，如图
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:2.1"
@@ -257,7 +246,17 @@ noprefix "false"
 
 \end_inset
 
-所示：
+所示
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+本文图片大部分来源于网络，在此声明
+\end_layout
+
+\end_inset
+
+：
 \end_layout
 
 \begin_layout Standard
@@ -406,155 +405,30 @@ literal "false"
 
 \end_inset
 
-，我们只需要提供语料并利用现有的任意工具训练得到词向量表示即可。
-\end_layout
+，我们只需要提供语料并利用现有的任意工具训练得到词向量表示即可；或者可以使用以及训练好的开源词向量
+\begin_inset CommandInset citation
+LatexCommand cite
+key "pre-word-vec"
+literal "false"
 
-\begin_layout Section
-BiLSTM模型
-\end_layout
-
-\begin_layout Standard
-通过Word Embedding我们得到了词的向量表示，到此我们已经迈出了任务的第一步，接下来，我们就要利用训练得到词向量来表达我们的文本数据，并将它用于训练模
-型。
-\end_layout
-
-\begin_layout Subsection
-什么是LSTM和BiLSTM
-\end_layout
-
-\begin_layout Standard
-LSTM是RNN的一种，由于其设计特点，非常适用于对时序数据的建模，如文本数据，BiLSTM是由前向LSTM和后向LSTM组合而成的双向LSTM，它们都常在自然
-语言处理中用于对上下文信息的建模。
-\end_layout
-
-\begin_layout Subsection
-为什么使用BiLSTM
-\end_layout
-
-\begin_layout Standard
-前面我们已经提到了如何表达一个词，那么进一步，我们如何将词的表示组合成句子的表示呢？一种简单的思路就是将句子中出现的词的向量表示进行加和，但是这种方法忽视了词语
-在句子中的前后上下文信息。而使用LSTM模型可以更好的捕捉到较长距离的依赖关系。因为LSTM通过训练过程可以学到记忆哪些信息和遗忘哪些信息。
-\end_layout
-
-\begin_layout Standard
-但是利用LSTM对句子进行建模还存在一个问题：无法编码从后到前的信息。因此，我们需要用一个双向的LSTM模型来表达一个句子，它能让我们更好地捕捉双向的语义依赖。
-\end_layout
-
-\begin_layout Standard
-具体到我们的实验任务上，BiLSTM模型能够对我们输入句子的每一个词（或字）的所属标签的概率
-\begin_inset Formula $\begin{alignedat}{1}\end{alignedat}
-$
 \end_inset
 
-进行打分，指导我们做下一步的工作。
+，本次实验采用的是预训练的词向量。
 \end_layout
 
 \begin_layout Section
-CRF层
+BiLSTM + Attention模型
 \end_layout
 
-\begin_layout Standard
-条件随机场（CRF）的目标函数不仅考虑输入的状态特征函数，而且还包含了标签转移特征函数。在已知模型时，给输入序列求预测输出序列即求使目标函数最大化的最优序列，是
-一个动态规划问题，可以使用Viterbi算法解码来得到最优标签序列。CRF的优点在于其为一个位置进行标注的过程中可以利用丰富的内部及上下文特征信息。
-\end_layout
-
-\begin_layout Section
+\begin_layout Subsection
 总体框架
 \end_layout
 
 \begin_layout Standard
-实现模型的总体框架如图
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:2.3"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示：
-\end_layout
-
-\begin_layout Itemize
-Word Embedding layer：将词转化为向量表示。
-\end_layout
-
-\begin_layout Itemize
-BiLSTM layer：输入句子中每个词的词向量表示，输出维度为tag size的向量，其中每个维度
-\begin_inset Formula $P_{i,j}$
-\end_inset
-
-表示每个词
-\begin_inset Formula $w_{i}$
-\end_inset
-
-到
-\begin_inset Formula $tag_{j}$
-\end_inset
-
-的非归一化概率。
-\end_layout
-
-\begin_layout Itemize
-CRF layer：存在一个转移矩阵A，则
-\begin_inset Formula $A_{i,j}$
-\end_inset
-
-代表
-\begin_inset Formula $tag_{i}$
-\end_inset
-
-转移到
-\begin_inset Formula $tag_{j}$
-\end_inset
-
-的转移概率，对于输入序列X对应的输出tag序列y，定义分数为：
-\begin_inset Formula 
-\[
-score(X,y)=\sum A_{y_{i},y_{i+1}}+\sum P_{i,y_{i}}
-\]
-
-\end_inset
-
-可以看出整个序列的打分等于各个位置的打分之和，而每个位置的打分由LSTM与转移矩阵A的输出决定，进而利用Softmax得到归一化后的概率：
-\begin_inset Formula 
-\[
-p\text{(y|X)}=\frac{exp(score(X,y))}{\sum exp(X,y^{'})}
-\]
-
-\end_inset
-
-其中
-\begin_inset Formula $y^{'}$
-\end_inset
-
-是所有tag序列（包括不可能的序列）中的任意一个。在训练中只需要最大化似然概率
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\xout off
-\uuline off
-\uwave off
-\noun off
-\color none
-
-\begin_inset Formula $p(y|X)$
-\end_inset
-
-即可，这里我们使用对数似然：
-\begin_inset Formula $log(p(y|X)\text{)}$
-\end_inset
-
-。
-\end_layout
-
-\begin_layout Standard
-模型在预测过程中利用动态规划的Viterbi算法来求解最优路径，也即最终的tag序列。
+关于BiLSTM + Attention模型来源于论文《Bidirectional Long Short-Term Memory Networks
+ for Relation Classification》，就是是在BiLSTM的模型上加入Attention层，在Bi-LSTM中我们会用最后一个时序的输出向
+量 作为特征向量，然后进行softmax分类。Attention是先计算每个时序的权重，然后将所有时序 的向量进行加权和作为特征向量，然后进行softmax分类
+。在实验中，加上Attention确实对结果有所提升。其模型结构如下图：
 \end_layout
 
 \begin_layout Standard
@@ -568,8 +442,8 @@ status collapsed
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename /Users/jim/Code/njuthesis/res/total.png
-	height 9cm
+	filename /Users/jim/Downloads/njuthesis/res/BiLSTM.png
+	height 7cm
 
 \end_inset
 
@@ -580,7 +454,7 @@ status collapsed
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-模型总体框架意图
+BiLSTM+Attenstion示意图
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:2.3"
@@ -600,8 +474,238 @@ name "fig:2.3"
 
 \end_layout
 
+\begin_layout Subsection
+Attention
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Attention"
+literal "false"
+
+\end_inset
+
+的作用
+\end_layout
+
+\begin_layout Standard
+根据人类的阅读习惯进行思考，我们在阅读的时候，注意力通常不会平均分配在文本中的每个词。再回到上面的文本表示，如果直接将每个时刻的输出向量相加再平均，就等于认为每
+个输入词对于文本表示的贡献是相等的，但实际情况往往不是这样，每个词汇应该有自己的权重。
+\end_layout
+
+\begin_layout Standard
+所以在合并这些输出向量时，希望可以将注意力集中在那些对当前任务更重要的向量上。也就是给他们都分配一个权值，将所有的输出向量加权平均。假设输出向量为
+\begin_inset Formula $h_{t}$
+\end_inset
+
+，权重为
+\begin_inset Formula $\alpha_{t}$
+\end_inset
+
+则合并后的表示为：
+\begin_inset Formula 
+\[
+s=\sum_{t}\alpha_{t}h_{t}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+上文所说的为BiLSTM的每个输出向量分配不同权值，使得模型可以将注意力集中在重点几个词，降低其他无关词的作用的机制就是Attention机制。使用了Atten
+tion机制可以使得文本表示的结果在当前的任务中更合理。
+\end_layout
+
+\begin_layout Section
+BERT模型
+\end_layout
+
+\begin_layout Standard
+最近由Google团队提出的BERT
+\begin_inset CommandInset citation
+LatexCommand cite
+key "BERT"
+literal "false"
+
+\end_inset
+
+模型在多个NLP任务中刷新了成绩，所以在本次实验中，我也来尝试一下将这个模型用于本次实验的任务。需要注意的是BERT一种fine-tuning的方法，它与fea
+ture-based的方法有所不同。接下来将简单介绍一下这个模型，详细信息可以参看论文。
+\end_layout
+
+\begin_layout Subsection
+模型架构
+\end_layout
+
+\begin_layout Standard
+论文使用了两种模型
+\begin_inset CommandInset citation
+LatexCommand cite
+key "BERT-detail"
+literal "false"
+
+\end_inset
+
+：
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $BERT_{BASE}$
+\end_inset
+
+: L=12, H=768, A=12, Total Parameters=110M
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $BERT_{LARGE}$
+\end_inset
+
+: L=24, H=1024, A=16, Total Parameters=340M
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+这里L是layers层数(即Transformer blocks个数)，H是hidden vector size, A是self-attention的“头数”，
+架构大体如图所示。
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/BERT.png
+	height 7cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+BERT示意图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.4"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+作为fine-tuning这一类的方法，作者提出了改进的方案，具体做法是：
+\end_layout
+
+\begin_layout Itemize
+采取新的预训练的目标函数：随机mask输入中的一些tokens，然后在预训练中对它们进行预测
+\end_layout
+
+\begin_layout Itemize
+增加句子级别的任务：建立句子间是否为上下承接关系的理解
+\end_layout
+
+\begin_layout Subsection
+输入的表示
+\end_layout
+
+\begin_layout Standard
+针对不同的任务，模型能够明确的表达一个句子。对于每一个token, 它的表征由其对应的token embedding, 段表征(segment
+ embedding)和位置表征(position embedding)相加产生。如下图
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:3.1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+所示
+\begin_inset CommandInset citation
+LatexCommand cite
+key "BERT-detail"
+literal "false"
+
+\end_inset
+
+：
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/jim/Downloads/njuthesis/res/输入表示.png
+	width 15cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+BERT输入表示示意图
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:2.5"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+这种输入表示方式能够完美地契合分类任务的需求，也即我们本次实验的需求。
+\end_layout
+
 \begin_layout Chapter
-实现演示与总结
+结果分析与总结
 \end_layout
 
 \begin_layout Section
@@ -629,7 +733,7 @@ Python版本：3.6
 \end_layout
 
 \begin_layout Itemize
-Tensorflow版本：1.2.0（CPU版本）
+Tensorflow版本：BiLSTM模型为1.6.0（CPU版本）、BERT为1.11.0（CPU版本）
 \end_layout
 
 \begin_layout Itemize
@@ -637,229 +741,124 @@ jieba版本：0.39
 \end_layout
 
 \begin_layout Section
-运行方式
+BiLSTM + Attention
 \end_layout
 
 \begin_layout Subsection
-预处理
+使用开源模型框架
 \end_layout
 
 \begin_layout Standard
-由于我的实现是基于已有的github上的开源代码
+本次实验采用了开源BiLSTM + Attention模型框架
 \begin_inset CommandInset citation
 LatexCommand cite
-key "chinesener"
+key "BiLSTM-code"
 literal "false"
 
 \end_inset
 
-来做的，故我们需要对我们的训练集格式进行修改，具体来说，我们需要将训练集进行从基于“词”的打标方式修改为基于“字”的打标方式，转化规则如表
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:3.1"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-所示。训练完模型后，预测时输出的标签也是基于“字”的，所以我们还要将它转化回来。
+，并将其移植到我们的具体实验任务中来。
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-词标签和字标签的转换规则
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:3.1"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="5" columns="2">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-词标签
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-字标签
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-O
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-对词中的每个字都标为O
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-B-xxx
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-对词中的第一个字标为B-xxx，其余标为I-xxx
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-I-xxx
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-对词中的每个字都标为I-xxx
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-O-xxx
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-对词中的每个字都标为I-xxx
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-还有一点就是，调完参之后，我们可以将dev数据集也加入到训练集（增加训练数据）中重新训练模型，并关掉交叉验证的部分代码提升训练效率（在我的代码中已经做好了这些事
-情，所有的数据均在data/目录下）。
+使用的超参数在随附代码的configure.py中可以找到，这里不在赘述。
 \end_layout
 
 \begin_layout Subsection
-训练
+如何运行
 \end_layout
 
 \begin_layout Standard
-$ python3 main.py --train=True --clean=True
+训练：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\$\ python\ train.py
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+预测：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\$\ python\ predict.py
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
-预测
+性能分析
 \end_layout
 
 \begin_layout Standard
-$ python3 main.py
+训练时间：如上配置训练500轮，总共耗时2天
+\end_layout
+
+\begin_layout Standard
+F1-Score：在A榜为0.749左右；另外，由于最终采用了BERT的结果所以未保留BiLSTM训练好的模型，故没有它在B榜的分数（重新训练太耗费时间了）。
 \end_layout
 
 \begin_layout Section
-结果展示
+BERT
+\end_layout
+
+\begin_layout Subsection
+使用开源模型框架
 \end_layout
 
 \begin_layout Standard
-如Leaderboard所示，F1值为0.956029
+本次实验采用了Google开源的BERT模型框架
+\begin_inset CommandInset citation
+LatexCommand cite
+key "BERT-code"
+literal "false"
+
+\end_inset
+
+，并将其移植到我们的具体实验任务中来，并使用与训练的中文模型chinese_L-12_H-768_A-12。
+\end_layout
+
+\begin_layout Standard
+使用的超参数在随附代码的run.sh中可以找到，这里不在赘述。
+\end_layout
+
+\begin_layout Subsection
+如何运行
+\end_layout
+
+\begin_layout Standard
+参照run.sh中的命令运行。
+\end_layout
+
+\begin_layout Subsection
+性能分析
+\end_layout
+
+\begin_layout Standard
+训练时间：如上配置训练6轮，总共耗时7天
+\end_layout
+
+\begin_layout Standard
+F1-Score：详见A榜和B榜的最终结果
 \end_layout
 
 \begin_layout Section
-遇到的问题
+总结与展望
 \end_layout
 
-\begin_layout Standard
-我遇到如下问题：
-\end_layout
-
-\begin_layout Itemize
-Tensorflow版本 + CUDA版本 + Python版本有严格的对应关系，如果它们的版本不匹配，可能会导致Tensorflow无法正常工作。
-\end_layout
-
-\begin_layout Standard
-由于时间关系，Tensorflow最后没有采用GPU版本，改用CPU版本。
-\end_layout
-
-\begin_layout Section
+\begin_layout Subsection
 总结
 \end_layout
 
@@ -868,30 +867,39 @@ Tensorflow版本 + CUDA版本 + Python版本有严格的对应关系，如果它
 \end_layout
 
 \begin_layout Itemize
-基于“字”打标签的方式训练出的模型优与基于“词”打标签方式训练出的模型，我猜想原因是中文词的粒度太大，且语料不足导致未见词过多，因而模型“学习不足”。
+训练集的反例（不通顺）句子样本不足，导致直接使用softmax的反例置信度很低。
 \end_layout
 
 \begin_layout Itemize
-每次“喂”给模型的句子长度不要过长（对每一行数据可以以句号为分隔符划分数据），太长的句子可能会让概率计算的可信度降低。
+测试集的数据分布与训练集相反，反例较多，导致模型不能很好地泛化。
 \end_layout
 
-\begin_layout Itemize
-调参结束后将dev加入训练集，重新训练模型。
+\begin_layout Subsection
+展望
 \end_layout
 
 \begin_layout Standard
-注：本文所用图片基本来源于网络和各个文献，再此致谢。
+我对本次实验的展望如下：
+\end_layout
+
+\begin_layout Itemize
+因为训练集通顺的句子居多，所以在模型完全训练的情况下，它对通顺句子的判断的置信度应该会比高，所以，比较模型输出结果的分类概率，只有当模型以很高的概率（99%）判
+断句子为通顺时才认为句子是通顺的，而不是简单地比较概率的大小关系来判断。
+\end_layout
+
+\begin_layout Itemize
+希望能找到更多的反例来模拟真实数据分布。
 \end_layout
 
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "NER-blog"
+key "LM-blog"
 literal "false"
 
 \end_inset
 
-https://www.cnblogs.com/Determined22/p/7238342.html
+https://blog.csdn.net/u010899985/article/details/79177053
 \end_layout
 
 \begin_layout Bibliography
@@ -911,12 +919,12 @@ Pennington, Jeffrey, Richard Socher, and Christopher Manning.
 \begin_layout Bibliography
 \begin_inset CommandInset bibitem
 LatexCommand bibitem
-key "chinesener"
+key "jieba"
 literal "false"
 
 \end_inset
 
-https://github.com/zjy-ucas/ChineseNER
+https://pypi.org/project/jieba/
 \end_layout
 
 \begin_layout Bibliography
@@ -958,6 +966,75 @@ literal "false"
 Goldberg, Yoav, and Omer Levy.
  "word2vec Explained: deriving Mikolov et al.'s negative-sampling word-embedding
  method." arXiv preprint arXiv:1402.3722 (2014).
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "pre-word-vec"
+literal "false"
+
+\end_inset
+
+https://github.com/Embedding/Chinese-Word-Vectors
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "Attention"
+literal "false"
+
+\end_inset
+
+https://blog.csdn.net/thriving_fcl/article/details/73381217
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "BERT"
+literal "false"
+
+\end_inset
+
+Devlin J , Chang M W , Lee K , et al.
+ BERT: Pre-training of Deep Bidirectional Transformers for Language Understandin
+g[J].
+ 2018.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "BERT-detail"
+literal "false"
+
+\end_inset
+
+https://blog.csdn.net/triplemeng/article/details/83053419
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "BiLSTM-code"
+literal "false"
+
+\end_inset
+
+https://github.com/SeoSangwoo/Attention-Based-BiLSTM-relation-extraction
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "BERT-code"
+literal "false"
+
+\end_inset
+
+https://github.com/google-research/bert
 \end_layout
 
 \end_body
