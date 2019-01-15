@@ -847,7 +847,7 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
-训练时间：如上配置训练6轮，总共耗时7天
+训练时间：如上配置训练3轮，总共耗时4天
 \end_layout
 
 \begin_layout Standard
@@ -855,40 +855,72 @@ F1-Score：详见A榜和B榜的最终结果
 \end_layout
 
 \begin_layout Section
-总结与展望
-\end_layout
-
-\begin_layout Subsection
 总结
 \end_layout
 
+\begin_layout Subsection
+问题及解决方案
+\end_layout
+
 \begin_layout Standard
-我对本次实验的总结如下：
+遇到的问题主要有两个：
 \end_layout
 
 \begin_layout Itemize
-训练集的反例（不通顺）句子样本不足，导致直接使用softmax的反例置信度很低。
+对于句子通不通顺的判定应该选择什么样的模型来判断
 \end_layout
 
 \begin_layout Itemize
-测试集的数据分布与训练集相反，反例较多，导致模型不能很好地泛化。
+训练集中反例大约是正例的1/13，即不通顺句子的样例太少，不利于模型训练
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+针对这两个问题我的解决方案如下：
+\end_layout
+
+\begin_layout Itemize
+选择两个用于句子分类的候选模型，最后看哪一个效果更好
+\end_layout
+
+\begin_layout Itemize
+关于反例不足的问题，我采取将原来训练集中通顺的句子随机
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+代码及随机种子见随附项目代码的data目录
+\end_layout
+
+\end_inset
+
+裁剪、调换顺序变为不通顺的句子再加入到训练集中
 \end_layout
 
 \begin_layout Subsection
-展望
+将来可能的改进
 \end_layout
 
 \begin_layout Standard
-我对本次实验的展望如下：
+主要有两点改进的想法：
 \end_layout
 
 \begin_layout Itemize
-因为训练集通顺的句子居多，所以在模型完全训练的情况下，它对通顺句子的判断的置信度应该会比高，所以，比较模型输出结果的分类概率，只有当模型以很高的概率（99%）判
-断句子为通顺时才认为句子是通顺的，而不是简单地比较概率的大小关系来判断。
+专门设计应用于句子通不通顺的模型，而非简单套用原有句子分类模型
 \end_layout
 
 \begin_layout Itemize
-希望能找到更多的反例来模拟真实数据分布。
+针对训练集反例不足的问题未来可以在现实场景中搜集更多的不通顺样例，而非简单从训练集通顺的句子中裁剪
 \end_layout
 
 \begin_layout Bibliography
